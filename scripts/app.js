@@ -48,15 +48,15 @@ function updateClock() {
   const el = document.getElementById('nav-datetime');
   if (!el) return;
   const now = new Date();
-  const opts = { day:'2-digit', month:'short', year:'numeric' };
-  el.innerHTML = `${now.toLocaleDateString('en-IN', opts)}<br>${now.toLocaleTimeString('en-IN', {hour12: false})} IST`;
+  const opts = { day: '2-digit', month: 'short', year: 'numeric' };
+  el.innerHTML = `${now.toLocaleDateString('en-IN', opts)}<br>${now.toLocaleTimeString('en-IN', { hour12: false })} IST`;
 }
 
 // ───────────────────────────────────────────────────────────────
 // HAMBURGER MENU
 // ───────────────────────────────────────────────────────────────
 function toggleHamburger() {
-  const btn  = document.getElementById('hamburger-btn');
+  const btn = document.getElementById('hamburger-btn');
   const menu = document.getElementById('hamburger-menu');
   const isOpen = menu.classList.toggle('open');
   btn.classList.toggle('open', isOpen);
@@ -159,7 +159,7 @@ function togglePasswordVisibility() {
 function handleLogin(event) {
   event.preventDefault();
   const badge = document.getElementById('employee-id').value.trim().toUpperCase();
-  const pass  = document.getElementById('password').value;
+  const pass = document.getElementById('password').value;
   const errEl = document.getElementById('login-error');
   const errMsg = document.getElementById('login-error-msg');
 
@@ -246,30 +246,30 @@ function showDashboard(user) {
   document.getElementById('alert-count-badge').textContent = criticalCount;
 
   // Populate map header network stats
-  const total       = RAILWAY_DATABASE.tracks.length;
+  const total = RAILWAY_DATABASE.tracks.length;
   const operational = RAILWAY_DATABASE.tracks.filter(t => t.status === 'operational').length;
-  const blocked     = total - operational;
-  const stations    = RAILWAY_DATABASE.stations.length;
+  const blocked = total - operational;
+  const stations = RAILWAY_DATABASE.stations.length;
   const trainsAffected = RAILWAY_DATABASE.trains.filter(t => t.status === 'halted' || t.status === 'delayed').length;
 
   const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
 
   // Full-width status bar
-  setEl('nsb-operational',    operational);
-  setEl('nsb-blocked',        blocked);
+  setEl('nsb-operational', operational);
+  setEl('nsb-blocked', blocked);
   setEl('nsb-trains-blocked', trainsAffected);
-  setEl('nsb-total',          total);
-  setEl('nsb-stations',       stations);
+  setEl('nsb-total', total);
+  setEl('nsb-stations', stations);
 
   // Sidebar stats (legacy)
   setEl('ns-total-tracks', total);
-  setEl('ns-operational',  operational);
-  setEl('ns-blocked',      blocked);
-  setEl('ns-stations',     stations);
+  setEl('ns-operational', operational);
+  setEl('ns-blocked', blocked);
+  setEl('ns-stations', stations);
 
   // Timestamp
   const now = new Date();
-  setEl('nsb-updated', 'Updated: ' + now.toLocaleTimeString('en-IN', {hour12: false}) + ' IST');
+  setEl('nsb-updated', 'Updated: ' + now.toLocaleTimeString('en-IN', { hour12: false }) + ' IST');
 
   // ── ROLE-BASED TAB VISIBILITY ─────────────────────────────
   const smOnly = document.querySelectorAll('.sm-only');
@@ -358,7 +358,7 @@ function initMap() {
 
 function resizeCanvas() {
   const container = document.getElementById('map-container');
-  canvas.width  = container.offsetWidth;
+  canvas.width = container.offsetWidth;
   canvas.height = container.offsetHeight - 40; // minus header bar
 }
 
@@ -381,7 +381,7 @@ function drawMap() {
   // Draw tracks
   RAILWAY_DATABASE.tracks.forEach(track => {
     const from = stationLookup[track.from];
-    const to   = stationLookup[track.to];
+    const to = stationLookup[track.to];
     if (!from || !to) return;
     if (zone !== 'ALL' && from.zone !== zone && to.zone !== zone) return;
 
@@ -469,8 +469,8 @@ function drawTrack(from, to, isBlocked, isHovered, track) {
 
 function drawSleepers(x1, y1, x2, y2) {
   const dx = x2 - x1, dy = y2 - y1;
-  const len = Math.sqrt(dx*dx + dy*dy);
-  const nx = -dy/len * 5, ny = dx/len * 5;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  const nx = -dy / len * 5, ny = dx / len * 5;
   const numSleepers = Math.floor(len / 15);
 
   ctx.save();
@@ -567,7 +567,7 @@ function drawStation(station, isHovered) {
     ctx.fillStyle = 'rgba(255,255,255,0.88)';
     ctx.beginPath();
     const pad = 3;
-    ctx.roundRect(x - textWidth/2 - pad, labelY - 1, textWidth + pad*2, fontSize + 3, 3);
+    ctx.roundRect(x - textWidth / 2 - pad, labelY - 1, textWidth + pad * 2, fontSize + 3, 3);
     ctx.fill();
 
     ctx.fillStyle = isTerminal ? '#0d2b6e' : '#1040a0';
@@ -638,7 +638,7 @@ function onMouseMove(e) {
   for (const s of RAILWAY_DATABASE.stations) {
     const dx = wx - s.x, dy = wy - s.y;
     const r = (s.type === 'terminal' ? 12 : 8);
-    if (Math.sqrt(dx*dx + dy*dy) < r) { hoveredS = s.id; break; }
+    if (Math.sqrt(dx * dx + dy * dy) < r) { hoveredS = s.id; break; }
   }
 
   // Check track hover (only if no station hovered)
@@ -689,7 +689,7 @@ function onCanvasClick(e) {
   for (const station of RAILWAY_DATABASE.stations) {
     const dx = wx - station.x, dy = wy - station.y;
     const r = (station.type === 'terminal' ? 14 : 10);
-    if (Math.sqrt(dx*dx + dy*dy) < r) {
+    if (Math.sqrt(dx * dx + dy * dy) < r) {
       showStationPopup(station, cx, cy);
       return;
     }
@@ -708,11 +708,11 @@ function onCanvasClick(e) {
 
 function pointNearLine(px, py, x1, y1, x2, y2, threshold) {
   const dx = x2 - x1, dy = y2 - y1;
-  const len2 = dx*dx + dy*dy;
-  if (len2 === 0) return Math.hypot(px-x1, py-y1) < threshold;
-  const t = Math.max(0, Math.min(1, ((px-x1)*dx + (py-y1)*dy) / len2));
-  const nearX = x1 + t*dx, nearY = y1 + t*dy;
-  return Math.hypot(px-nearX, py-nearY) < threshold;
+  const len2 = dx * dx + dy * dy;
+  if (len2 === 0) return Math.hypot(px - x1, py - y1) < threshold;
+  const t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / len2));
+  const nearX = x1 + t * dx, nearY = y1 + t * dy;
+  return Math.hypot(px - nearX, py - nearY) < threshold;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -750,7 +750,7 @@ function showTrackPopup(track, cx, cy) {
   const popup = document.getElementById('track-popup');
 
   const from = stationLookup[track.from];
-  const to   = stationLookup[track.to];
+  const to = stationLookup[track.to];
 
   const icon = track.status === 'blocked' ? '🔴' : '🟢';
   document.getElementById('track-popup-icon').textContent = icon;
@@ -785,7 +785,7 @@ function positionPopup(popup, cx, cy) {
   if (top < 50) top = 50;
 
   popup.style.left = left + 'px';
-  popup.style.top  = top + 'px';
+  popup.style.top = top + 'px';
 }
 
 function closePopup() {
@@ -830,7 +830,7 @@ function renderTracksGrid() {
   const grid = document.getElementById('tracks-grid');
   grid.innerHTML = RAILWAY_DATABASE.tracks.map(track => {
     const from = stationLookup[track.from];
-    const to   = stationLookup[track.to];
+    const to = stationLookup[track.to];
     const isBlocked = track.status === 'blocked';
     return `
       <div class="track-card ${isBlocked ? 'blocked' : ''}" data-track-id="${track.id}"
@@ -858,13 +858,13 @@ function renderTracksGrid() {
 }
 
 function filterTracks() {
-  const query  = document.getElementById('track-search').value.toLowerCase();
+  const query = document.getElementById('track-search').value.toLowerCase();
   const status = document.getElementById('track-status-filter').value;
   document.querySelectorAll('.track-card').forEach(card => {
     const fromText = card.dataset.from;
-    const toText   = card.dataset.to;
+    const toText = card.dataset.to;
     const cardStatus = card.dataset.status;
-    const matchQuery  = !query || fromText.includes(query) || toText.includes(query);
+    const matchQuery = !query || fromText.includes(query) || toText.includes(query);
     const matchStatus = status === 'all' || cardStatus === status;
     card.style.display = (matchQuery && matchStatus) ? '' : 'none';
   });
@@ -875,8 +875,8 @@ function filterTracks() {
 // ─────────────────────────────────────────────────────────────
 const ALERT_ICONS = {
   critical: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
-  warning:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
-  info:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`,
+  warning: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+  info: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`,
 };
 
 function renderAlerts() {
@@ -884,9 +884,9 @@ function renderAlerts() {
   const ALERT_TITLES = { critical: 'Critical Incident', warning: 'Advisory Warning', info: 'Information' };
   list.innerHTML = RAILWAY_DATABASE.alerts.map(alert => {
     const track = alert.track ? RAILWAY_DATABASE.tracks.find(t => t.id === alert.track) : null;
-    const from  = track ? (stationLookup[track.from]?.name || track.from) : '';
-    const to    = track ? (stationLookup[track.to]?.name || track.to)   : '';
-    const date  = new Date(alert.time).toLocaleString('en-IN', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+    const from = track ? (stationLookup[track.from]?.name || track.from) : '';
+    const to = track ? (stationLookup[track.to]?.name || track.to) : '';
+    const date = new Date(alert.time).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 
     return `
       <div class="alert-card ${alert.type}" data-type="${alert.type}">
@@ -920,9 +920,9 @@ function renderTrains() {
 
   grid.innerHTML = RAILWAY_DATABASE.trains.map(train => {
     const from = stationLookup[train.from]?.name || train.from;
-    const to   = stationLookup[train.to]?.name   || train.to;
+    const to = stationLookup[train.to]?.name || train.to;
     const track = RAILWAY_DATABASE.tracks.find(t => t.id === train.currentSection);
-    const sec   = track ? `${stationLookup[track.from]?.id}–${stationLookup[track.to]?.id}` : '–';
+    const sec = track ? `${stationLookup[track.from]?.id}–${stationLookup[track.to]?.id}` : '–';
 
     return `
       <div class="train-card">
@@ -1022,8 +1022,8 @@ function renderTracksGrid() {
 
   grid.innerHTML = RAILWAY_DATABASE.tracks.map(track => {
     const from = stationLookup[track.from];
-    const to   = stationLookup[track.to];
-    const isBlocked  = track.status === 'blocked';
+    const to = stationLookup[track.to];
+    const isBlocked = track.status === 'blocked';
     const isCompleted = getCompletedTracks().includes(track.id);
 
     // Check if query already raised for this track
@@ -1084,7 +1084,7 @@ function openQueryModal(preselectedTrackId) {
   sel.innerHTML = '<option value="">-- Select Track --</option>' +
     blockedTracks.map(t => {
       const from = stationLookup[t.from]?.name || t.from;
-      const to   = stationLookup[t.to]?.name   || t.to;
+      const to = stationLookup[t.to]?.name || t.to;
       return `<option value="${t.id}" ${t.id === preselectedTrackId ? 'selected' : ''}>${t.id}: ${from} → ${to}</option>`;
     }).join('');
 
@@ -1110,35 +1110,35 @@ function submitQuery(event) {
   const user = APP.currentUser;
   if (!user) return;
 
-  const trackId    = document.getElementById('qf-track').value;
+  const trackId = document.getElementById('qf-track').value;
   const damageType = document.getElementById('qf-damage-type').value;
-  const reason     = document.getElementById('qf-reason').value.trim();
-  const hours      = parseInt(document.getElementById('qf-hours').value);
-  const priority   = document.getElementById('qf-priority').value;
+  const reason = document.getElementById('qf-reason').value.trim();
+  const hours = parseInt(document.getElementById('qf-hours').value);
+  const priority = document.getElementById('qf-priority').value;
 
   const track = RAILWAY_DATABASE.tracks.find(t => t.id === trackId);
-  const from  = stationLookup[track?.from]?.name || track?.from || '?';
-  const to    = stationLookup[track?.to]?.name   || track?.to   || '?';
+  const from = stationLookup[track?.from]?.name || track?.from || '?';
+  const to = stationLookup[track?.to]?.name || track?.to || '?';
 
   const queries = loadQueries();
   const query = {
-    id:            'Q' + String(Date.now()).slice(-6),
+    id: 'Q' + String(Date.now()).slice(-6),
     trackId,
-    fromStation:   from,
-    toStation:     to,
+    fromStation: from,
+    toStation: to,
     damageType,
     reason,
     estimatedHours: hours,
     priority,
-    raisedById:    user.id,
-    raisedByName:  user.name,
-    raisedAt:      new Date().toISOString(),
-    status:        'pending',
-    assignedToId:   null,
+    raisedById: user.id,
+    raisedByName: user.name,
+    raisedAt: new Date().toISOString(),
+    status: 'pending',
+    assignedToId: null,
     assignedToName: null,
-    acceptedAt:    null,
-    startedAt:     null,
-    completedAt:   null,
+    acceptedAt: null,
+    startedAt: null,
+    completedAt: null,
   };
 
   queries.push(query);
@@ -1156,16 +1156,16 @@ function submitQuery(event) {
 // MY QUERIES TAB (Station Master)
 // ─────────────────────────────────────────────────────────────
 const STATUS_META = {
-  pending:     { label: '⏳ Pending',     cls: 'pending' },
-  accepted:    { label: '✔ Accepted',     cls: 'accepted' },
+  pending: { label: '⏳ Pending', cls: 'pending' },
+  accepted: { label: '✔ Accepted', cls: 'accepted' },
   in_progress: { label: '🔧 In Progress', cls: 'in_progress' },
-  completed:   { label: '✅ Completed',   cls: 'completed' },
+  completed: { label: '✅ Completed', cls: 'completed' },
 };
 
 const PRIORITY_META = {
-  high:   { label: '🔴 High',   cls: 'priority-high' },
+  high: { label: '🔴 High', cls: 'priority-high' },
   medium: { label: '🟡 Medium', cls: 'priority-medium' },
-  low:    { label: '🟢 Low',    cls: 'priority-low' },
+  low: { label: '🟢 Low', cls: 'priority-low' },
 };
 
 function renderMyQueries() {
@@ -1189,8 +1189,8 @@ function renderMyQueries() {
   container.innerHTML = queries.map(q => {
     const sm = STATUS_META[q.status] || STATUS_META.pending;
     const pm = PRIORITY_META[q.priority] || PRIORITY_META.medium;
-    const raisedAt = new Date(q.raisedAt).toLocaleString('en-IN', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-    const completedAt = q.completedAt ? new Date(q.completedAt).toLocaleString('en-IN', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : null;
+    const raisedAt = new Date(q.raisedAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    const completedAt = q.completedAt ? new Date(q.completedAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : null;
 
     return `<div class="query-card">
       <div class="query-card-header">
@@ -1249,12 +1249,12 @@ function renderRepairJobs() {
   container.innerHTML = queries.map(q => {
     const sm = STATUS_META[q.status] || STATUS_META.pending;
     const pm = PRIORITY_META[q.priority] || PRIORITY_META.medium;
-    const raisedAt = new Date(q.raisedAt).toLocaleString('en-IN', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+    const raisedAt = new Date(q.raisedAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
     const isMyJob = q.assignedToId === user.id;
-    const canAccept  = q.status === 'pending';
-    const canStart   = q.status === 'accepted' && isMyJob;
-    const canComplete= q.status === 'in_progress' && isMyJob;
-    const isDone     = q.status === 'completed';
+    const canAccept = q.status === 'pending';
+    const canStart = q.status === 'accepted' && isMyJob;
+    const canComplete = q.status === 'in_progress' && isMyJob;
+    const isDone = q.status === 'completed';
 
     const actionBtns = isDone ? '' : `
       <div class="job-actions">
@@ -1292,7 +1292,7 @@ function renderRepairJobs() {
         <div style="font-size:12px;color:var(--gray-500);margin-bottom:4px">
           Raised by: <strong>${q.raisedByName}</strong> &nbsp;·&nbsp; ${raisedAt}
         </div>
-        ${isDone ? `<div class="job-completed-banner">✅ Job Completed · ${new Date(q.completedAt).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>` : actionBtns}
+        ${isDone ? `<div class="job-completed-banner">✅ Job Completed · ${new Date(q.completedAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>` : actionBtns}
       </div>
     </div>`;
   }).join('');
@@ -1309,7 +1309,7 @@ function jobAction(queryId, action) {
 
   if (action === 'accept' && q.status === 'pending') {
     q.status = 'accepted';
-    q.assignedToId   = user.id;
+    q.assignedToId = user.id;
     q.assignedToName = user.name;
     q.acceptedAt = new Date().toISOString();
     showToast('✔ Job accepted! You are now assigned.', 'info');
@@ -1348,7 +1348,7 @@ function getTrackDisplayStatus(track) {
 // Patch: drawTrack checks getCompletedTracks()
 function drawTrackPatched(from, to, track, isHovered) {
   const displayStatus = getTrackDisplayStatus(track);
-  const isBlocked   = displayStatus === 'blocked';
+  const isBlocked = displayStatus === 'blocked';
   const isCompleted = displayStatus === 'completed';
 
   const x1 = from.x, y1 = from.y, x2 = to.x, y2 = to.y;
@@ -1358,13 +1358,13 @@ function drawTrackPatched(from, to, track, isHovered) {
 
   if (isBlocked) {
     ctx.shadowColor = 'rgba(239,68,68,0.4)';
-    ctx.shadowBlur  = isHovered ? 20 : 10;
+    ctx.shadowBlur = isHovered ? 20 : 10;
   } else if (isCompleted) {
     ctx.shadowColor = 'rgba(37,99,235,0.5)';
-    ctx.shadowBlur  = isHovered ? 18 : 8;
+    ctx.shadowBlur = isHovered ? 18 : 8;
   } else if (isHovered) {
     ctx.shadowColor = 'rgba(16,185,129,0.5)';
-    ctx.shadowBlur  = 15;
+    ctx.shadowBlur = 15;
   }
 
   ctx.beginPath();
@@ -1374,31 +1374,31 @@ function drawTrackPatched(from, to, track, isHovered) {
   if (isBlocked) {
     ctx.setLineDash([10, 5]);
     ctx.strokeStyle = isHovered ? '#dc2626' : '#ef4444';
-    ctx.lineWidth   = isHovered ? 4 : 3;
+    ctx.lineWidth = isHovered ? 4 : 3;
   } else if (isCompleted) {
     ctx.setLineDash([]);
     ctx.strokeStyle = isHovered ? '#1d4ed8' : '#3b82f6'; // blue
-    ctx.lineWidth   = isHovered ? 4 : 3;
+    ctx.lineWidth = isHovered ? 4 : 3;
   } else {
     ctx.setLineDash([]);
     ctx.strokeStyle = isHovered ? '#059669' : '#10b981'; // green
-    ctx.lineWidth   = isHovered ? 3.5 : 2.5;
+    ctx.lineWidth = isHovered ? 3.5 : 2.5;
   }
 
   ctx.lineCap = 'round';
   ctx.stroke();
 
-  if (!isBlocked && !isCompleted && APP.mapState.scale > 1.2) drawSleepers(x1,y1,x2,y2);
-  if (isBlocked) drawBlockedIndicator(x1,y1,x2,y2);
+  if (!isBlocked && !isCompleted && APP.mapState.scale > 1.2) drawSleepers(x1, y1, x2, y2);
+  if (isBlocked) drawBlockedIndicator(x1, y1, x2, y2);
 
   // Completed: small blue tick badge at midpoint
   if (isCompleted) {
-    const mx = (x1+x2)/2, my = (y1+y2)/2;
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
     ctx.fillStyle = '#2563eb';
     ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(37,99,235,0.6)';
-    ctx.beginPath(); ctx.arc(mx,my,5,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(mx, my, 5, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = 'white';
-    ctx.font = 'bold 7px Inter'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font = 'bold 7px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.shadowBlur = 0;
     ctx.fillText('✓', mx, my);
   }
@@ -1421,7 +1421,7 @@ function drawMap() {
 
   RAILWAY_DATABASE.tracks.forEach(track => {
     const from = stationLookup[track.from];
-    const to   = stationLookup[track.to];
+    const to = stationLookup[track.to];
     if (!from || !to) return;
     if (zone !== 'ALL' && from.zone !== zone && to.zone !== zone) return;
     const isHovered = APP.mapState.hoveredTrack === track.id;
@@ -1447,8 +1447,8 @@ function showToast(message, type = 'info') {
 
   const colors = {
     success: '#065f46,#d1fae5',
-    info:    '#1040a0,#dbeafe',
-    error:   '#991b1b,#fee2e2',
+    info: '#1040a0,#dbeafe',
+    error: '#991b1b,#fee2e2',
   };
   const [textColor, bgColor] = (colors[type] || colors.info).split(',');
 
@@ -1487,8 +1487,8 @@ function switchTab(tab) {
   document.getElementById('hamburger-menu')?.classList.remove('open');
   document.getElementById('hamburger-btn')?.classList.remove('open');
 
-  if (tab === 'map')          setTimeout(() => initMap(), 50);
-  if (tab === 'tracks')       renderTracksGrid();
-  if (tab === 'my-queries')   renderMyQueries();
-  if (tab === 'repair-jobs')  renderRepairJobs();
+  if (tab === 'map') setTimeout(() => initMap(), 50);
+  if (tab === 'tracks') renderTracksGrid();
+  if (tab === 'my-queries') renderMyQueries();
+  if (tab === 'repair-jobs') renderRepairJobs();
 }
