@@ -471,7 +471,11 @@ function initMap() {
   ctx = canvas.getContext('2d');
 
   stationLookup = {};
-  RAILWAY_DATABASE.stations.forEach(s => stationLookup[s.id] = s);
+  RAILWAY_DATABASE.stations.forEach(s => {
+    stationLookup[s.id] = s;
+    if (s.code) stationLookup[s.code] = s;
+    if (s.name) stationLookup[s.name] = s;
+  });
 
   resizeCanvas();
   attachMapEvents();
@@ -503,10 +507,10 @@ function drawMap() {
   // 1. Draw terrain background
   drawTerrain();
 
-  // 2. Draw water/coastal areas
+  // 2. Draw water bodies (Yamuna River)
   drawWaterBodies();
 
-  // 3. Draw India outline
+  // 3. Draw regional division boundary
   drawIndiaOutline();
 
   // 4. Draw the rail network
@@ -534,101 +538,83 @@ function drawMap() {
 
 // ─── Terrain ───────────────────────────────────────────────
 function drawTerrain() {
-  const grad = ctx.createLinearGradient(100, 100, 700, 650);
-  grad.addColorStop(0,   '#1a2f1a');  // North – dark forest
-  grad.addColorStop(0.2, '#22381a');
-  grad.addColorStop(0.4, '#263320');
-  grad.addColorStop(0.6, '#1e3025');
-  grad.addColorStop(0.8, '#1a2e20');
-  grad.addColorStop(1,   '#172b1f');
+  const grad = ctx.createLinearGradient(100, 50, 700, 600);
+  grad.addColorStop(0,   '#0b1a2e');
+  grad.addColorStop(0.3, '#0c2238');
+  grad.addColorStop(0.6, '#0d1f30');
+  grad.addColorStop(1,   '#081626');
 
   ctx.fillStyle = grad;
-  ctx.fillRect(-200, -100, 1100, 900);
+  ctx.fillRect(-300, -200, 1500, 1200);
 
-  // Indo-Gangetic plains (light tan)
+  // Delhi Urban Center glow (central hub)
   ctx.save();
-  ctx.fillStyle = 'rgba(200,175,120,0.08)';
+  const urbanGrad = ctx.createRadialGradient(380, 210, 10, 380, 210, 160);
+  urbanGrad.addColorStop(0, 'rgba(59,130,246,0.12)');
+  urbanGrad.addColorStop(0.5, 'rgba(37,99,235,0.05)');
+  urbanGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = urbanGrad;
   ctx.beginPath();
-  ctx.ellipse(430, 200, 220, 80, 0, 0, Math.PI * 2);
+  ctx.arc(380, 210, 160, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 
-  // Deccan plateau (warm brownish)
+  // Grid lines (subtle blueprint / CAD styling)
   ctx.save();
-  ctx.fillStyle = 'rgba(160,120,70,0.06)';
-  ctx.beginPath();
-  ctx.ellipse(360, 400, 160, 140, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-
-  // Map grid (subtle road-map style)
-  ctx.save();
-  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.035)';
   ctx.lineWidth = 0.5;
-  for (let x = -100; x < 800; x += 50) {
-    ctx.beginPath(); ctx.moveTo(x, -100); ctx.lineTo(x, 750); ctx.stroke();
+  for (let x = -200; x < 1200; x += 60) {
+    ctx.beginPath(); ctx.moveTo(x, -200); ctx.lineTo(x, 900); ctx.stroke();
   }
-  for (let y = -50; y < 700; y += 50) {
-    ctx.beginPath(); ctx.moveTo(-100, y); ctx.lineTo(800, y); ctx.stroke();
+  for (let y = -200; y < 900; y += 60) {
+    ctx.beginPath(); ctx.moveTo(-200, y); ctx.lineTo(1200, y); ctx.stroke();
   }
   ctx.restore();
 }
 
 function drawWaterBodies() {
+  // Yamuna River flowing through Delhi from North to Southeast
   ctx.save();
-  // Western coast
-  const coastGrad = ctx.createLinearGradient(100, 400, 180, 400);
-  coastGrad.addColorStop(0, 'rgba(30,100,180,0.18)');
-  coastGrad.addColorStop(1, 'transparent');
-  ctx.fillStyle = coastGrad;
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.22)';
+  ctx.lineWidth = 14;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
   ctx.beginPath();
-  ctx.moveTo(130, 300); ctx.quadraticCurveTo(90, 450, 130, 560);
-  ctx.lineTo(170, 560); ctx.quadraticCurveTo(140, 450, 170, 300);
-  ctx.fill();
+  ctx.moveTo(395, 20);
+  ctx.quadraticCurveTo(385, 100, 390, 170);
+  ctx.quadraticCurveTo(395, 210, 410, 250);
+  ctx.quadraticCurveTo(420, 310, 430, 400);
+  ctx.quadraticCurveTo(440, 480, 460, 620);
+  ctx.stroke();
 
-  // Eastern coast
-  const eCoastGrad = ctx.createLinearGradient(570, 300, 620, 300);
-  eCoastGrad.addColorStop(0, 'transparent');
-  eCoastGrad.addColorStop(1, 'rgba(30,100,180,0.15)');
-  ctx.fillStyle = eCoastGrad;
-  ctx.beginPath();
-  ctx.moveTo(560, 280); ctx.quadraticCurveTo(600, 400, 560, 510);
-  ctx.lineTo(600, 510); ctx.quadraticCurveTo(640, 400, 600, 280);
-  ctx.fill();
+  // Inner river stream (brighter)
+  ctx.strokeStyle = 'rgba(125, 211, 252, 0.35)';
+  ctx.lineWidth = 5;
+  ctx.stroke();
 
-  // Bay of Bengal hint (bottom right)
-  const bayGrad = ctx.createRadialGradient(580, 560, 0, 580, 560, 120);
-  bayGrad.addColorStop(0, 'rgba(20,80,160,0.15)');
-  bayGrad.addColorStop(1, 'transparent');
-  ctx.fillStyle = bayGrad;
-  ctx.fillRect(460, 500, 200, 150);
-
+  // River label
+  ctx.font = 'italic 10px Inter';
+  ctx.fillStyle = 'rgba(125, 211, 252, 0.5)';
+  ctx.fillText('Yamuna River', 440, 360);
   ctx.restore();
 }
 
 function drawIndiaOutline() {
-  // Simplified stylized India boundary – approximate polygon
+  // Regional Delhi Division Railway Boundary
   ctx.save();
-  ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+  ctx.strokeStyle = 'rgba(96,165,250,0.15)';
   ctx.lineWidth = 1.5;
-  ctx.setLineDash([4, 8]);
+  ctx.setLineDash([6, 6]);
   ctx.beginPath();
-  // NW → NE → East → South → West
-  ctx.moveTo(190, 120);
-  ctx.lineTo(270, 100); ctx.lineTo(340, 110); ctx.lineTo(420, 115);
-  ctx.lineTo(510, 120); ctx.lineTo(590, 155); ctx.lineTo(660, 165);
-  ctx.lineTo(700, 195); ctx.lineTo(690, 230); ctx.lineTo(655, 250);
-  ctx.lineTo(590, 330); ctx.lineTo(560, 370); ctx.lineTo(540, 420);
-  ctx.lineTo(530, 460); ctx.lineTo(515, 495); ctx.lineTo(490, 520);
-  ctx.lineTo(460, 550); ctx.lineTo(430, 570); ctx.lineTo(400, 580);
-  ctx.lineTo(370, 575); ctx.lineTo(345, 590); ctx.lineTo(330, 598);
-  ctx.lineTo(300, 585); ctx.lineTo(270, 570); ctx.lineTo(240, 545);
-  ctx.lineTo(210, 520); ctx.lineTo(190, 490); ctx.lineTo(170, 460);
-  ctx.lineTo(155, 420); ctx.lineTo(150, 380); ctx.lineTo(155, 340);
-  ctx.lineTo(170, 295); ctx.lineTo(180, 250); ctx.lineTo(185, 200);
-  ctx.lineTo(190, 165); ctx.lineTo(190, 120);
+  ctx.roundRect(40, 30, 780, 580, 16);
   ctx.stroke();
   ctx.setLineDash([]);
+
+  // Division Tag
+  ctx.font = '700 11px Rajdhani, sans-serif';
+  ctx.fillStyle = 'rgba(147,197,253,0.4)';
+  ctx.letterSpacing = '2px';
+  ctx.fillText('NORTHERN RAILWAY • DELHI DIVISION NETWORK (DATABASE.XLSX)', 60, 52);
   ctx.restore();
 }
 
@@ -883,7 +869,7 @@ function drawStation(station, isHovered) {
     ctx.textBaseline = 'top';
 
     const labelY = y + (isTerminal ? 6 : 8);
-    const displayName = APP.mapState.scale > 1.2 ? name : id;
+    const displayName = (APP.mapState.scale > 1.1 || isHovered) ? name : (station.code || id);
     const textWidth = ctx.measureText(displayName).width;
 
     // Label background
