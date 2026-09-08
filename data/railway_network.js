@@ -211,11 +211,120 @@ const RAILWAY_DATABASE = {
   ],
 
   trains: [
-    { id: "12301", name: "Howrah Rajdhani", from: "HWH", to: "NDLS", status: "on_time", speed: 130, currentSection: "T042" },
-    { id: "12951", name: "Mumbai Rajdhani", from: "NDLS", to: "MMCT", status: "delayed", delay: 45, speed: 90, currentSection: "T015" },
-    { id: "12839", name: "Chennai Mail", from: "HWH", to: "MAS", status: "on_time", speed: 110, currentSection: "T023" },
-    { id: "22691", name: "Rajdhani Express", from: "SBC", to: "NDLS", status: "on_time", speed: 120, currentSection: "T005" },
-    { id: "12007", name: "Mysuru Shatabdi", from: "SBC", to: "MAS", status: "halted", reason: "Track blocked T048", currentSection: "T048" },
-    { id: "12125", name: "Pragati Express", from: "MMCT", to: "PUNE", status: "on_time", speed: 100, currentSection: "T027" },
-  ]
+    { id: "12301", train_number: "12301", name: "Howrah Rajdhani", train_type: "Rajdhani Express", from: "HWH", to: "NDLS", status: "on_time", speed: 130, coaches: 22, maxSpeed: 140, priority: 1, currentSection: "T042" },
+    { id: "12951", train_number: "12951", name: "Mumbai Rajdhani", train_type: "Rajdhani Express", from: "NDLS", to: "MMCT", status: "delayed", delay: 45, speed: 90, coaches: 20, maxSpeed: 140, priority: 1, currentSection: "T015" },
+    { id: "12839", train_number: "12839", name: "Chennai Mail", train_type: "Superfast Express", from: "HWH", to: "MAS", status: "on_time", speed: 110, coaches: 24, maxSpeed: 120, priority: 2, currentSection: "T023" },
+    { id: "22691", train_number: "22691", name: "Bengaluru Rajdhani", train_type: "Rajdhani Express", from: "SBC", to: "NDLS", status: "on_time", speed: 120, coaches: 20, maxSpeed: 130, priority: 1, currentSection: "T005" },
+    { id: "12007", train_number: "12007", name: "Mysuru Shatabdi", train_type: "Shatabdi Express", from: "SBC", to: "MAS", status: "halted", reason: "Track blocked T048", speed: 0, coaches: 16, maxSpeed: 130, priority: 1, currentSection: "T048" },
+    { id: "12125", train_number: "12125", name: "Pragati Express", train_type: "Superfast Express", from: "MMCT", to: "PUNE", status: "on_time", speed: 100, coaches: 18, maxSpeed: 110, priority: 2, currentSection: "T027" },
+    { id: "22436", train_number: "22436", name: "Vande Bharat Express", train_type: "Vande Bharat", from: "NDLS", to: "BSB", status: "on_time", speed: 130, coaches: 16, maxSpeed: 160, priority: 1, currentSection: "T016" },
+    { id: "12002", train_number: "12002", name: "Bhopal Shatabdi", train_type: "Shatabdi Express", from: "NDLS", to: "BPL", status: "delayed", delay: 25, speed: 115, coaches: 18, maxSpeed: 150, priority: 1, currentSection: "T002" },
+  ],
+
+  // ============================================================
+  // SCHEDULES TABLE (Stop-by-Stop Timetables)
+  // ============================================================
+  schedules: [
+    // 12951 Mumbai Rajdhani
+    { schedule_id: 1, train_number: "12951", station_id: "NDLS", station_name: "New Delhi", arrival: "--", departure: "16:55", stop_no: 1, platform: "3", halt_min: 0, distance_km: 0 },
+    { schedule_id: 2, train_number: "12951", station_id: "KOTA", station_name: "Kota Junction", arrival: "21:30", departure: "21:40", stop_no: 2, platform: "1", halt_min: 10, distance_km: 465 },
+    { schedule_id: 3, train_number: "12951", station_id: "RTM", station_name: "Ratlam Junction", arrival: "00:35", departure: "00:38", stop_no: 3, platform: "4", halt_min: 3, distance_km: 731 },
+    { schedule_id: 4, train_number: "12951", station_id: "ADI", station_name: "Ahmedabad Junction", arrival: "03:50", departure: "03:58", stop_no: 4, platform: "2", halt_min: 8, distance_km: 1015 },
+    { schedule_id: 5, train_number: "12951", station_id: "MMCT", station_name: "Mumbai Central", arrival: "08:35", departure: "--", stop_no: 5, platform: "1", halt_min: 0, distance_km: 1386 },
+
+    // 12301 Howrah Rajdhani
+    { schedule_id: 6, train_number: "12301", station_id: "HWH", station_name: "Howrah Junction", arrival: "--", departure: "16:50", stop_no: 1, platform: "9", halt_min: 0, distance_km: 0 },
+    { schedule_id: 7, train_number: "12301", station_id: "DHN", station_name: "Dhanbad Junction", arrival: "19:55", departure: "20:00", stop_no: 2, platform: "2", halt_min: 5, distance_km: 259 },
+    { schedule_id: 8, train_number: "12301", station_id: "GAYA", station_name: "Gaya Junction", arrival: "22:19", departure: "22:22", stop_no: 3, platform: "1", halt_min: 3, distance_km: 459 },
+    { schedule_id: 9, train_number: "12301", station_id: "BSB", station_name: "Varanasi Junction", arrival: "00:45", departure: "00:55", stop_no: 4, platform: "2", halt_min: 10, distance_km: 664 },
+    { schedule_id: 10, train_number: "12301", station_id: "CNB", station_name: "Kanpur Central", arrival: "05:20", departure: "05:25", stop_no: 5, platform: "1", halt_min: 5, distance_km: 1013 },
+    { schedule_id: 11, train_number: "12301", station_id: "NDLS", station_name: "New Delhi", arrival: "10:05", departure: "--", stop_no: 6, platform: "4", halt_min: 0, distance_km: 1451 },
+
+    // 12839 Chennai Mail
+    { schedule_id: 12, train_number: "12839", station_id: "HWH", station_name: "Howrah Junction", arrival: "--", departure: "23:55", stop_no: 1, platform: "18", halt_min: 0, distance_km: 0 },
+    { schedule_id: 13, train_number: "12839", station_id: "BBS", station_name: "Bhubaneswar", arrival: "05:40", departure: "05:45", stop_no: 2, platform: "4", halt_min: 5, distance_km: 437 },
+    { schedule_id: 14, train_number: "12839", station_id: "VSKP", station_name: "Visakhapatnam", arrival: "13:40", departure: "14:00", stop_no: 3, platform: "1", halt_min: 20, distance_km: 880 },
+    { schedule_id: 15, train_number: "12839", station_id: "BZA", station_name: "Vijayawada Junction", arrival: "20:00", departure: "20:15", stop_no: 4, platform: "3", halt_min: 15, distance_km: 1227 },
+    { schedule_id: 16, train_number: "12839", station_id: "MAS", station_name: "Chennai Central", arrival: "03:15", departure: "--", stop_no: 5, platform: "6", halt_min: 0, distance_km: 1659 },
+
+    // 22691 Bengaluru Rajdhani
+    { schedule_id: 17, train_number: "22691", station_id: "SBC", station_name: "KSR Bengaluru", arrival: "--", departure: "20:00", stop_no: 1, platform: "8", halt_min: 0, distance_km: 0 },
+    { schedule_id: 18, train_number: "22691", station_id: "SC", station_name: "Secunderabad", arrival: "07:05", departure: "07:15", stop_no: 2, platform: "1", halt_min: 10, distance_km: 794 },
+    { schedule_id: 19, train_number: "22691", station_id: "NGP", station_name: "Nagpur Junction", arrival: "14:55", departure: "15:00", stop_no: 3, platform: "2", halt_min: 5, distance_km: 1299 },
+    { schedule_id: 20, train_number: "22691", station_id: "BPL", station_name: "Bhopal Junction", arrival: "20:50", departure: "21:00", stop_no: 4, platform: "1", halt_min: 10, distance_km: 1655 },
+    { schedule_id: 21, train_number: "22691", station_id: "AGC", station_name: "Agra Cantt", arrival: "01:50", departure: "01:52", stop_no: 5, platform: "2", halt_min: 2, distance_km: 2163 },
+    { schedule_id: 22, train_number: "22691", station_id: "NDLS", station_name: "New Delhi", arrival: "05:30", departure: "--", stop_no: 6, platform: "5", halt_min: 0, distance_km: 2360 },
+
+    // 12007 Mysuru Shatabdi
+    { schedule_id: 23, train_number: "12007", station_id: "SBC", station_name: "KSR Bengaluru", arrival: "--", departure: "06:00", stop_no: 1, platform: "7", halt_min: 0, distance_km: 0 },
+    { schedule_id: 24, train_number: "12007", station_id: "MYS", station_name: "Mysuru Junction", arrival: "08:00", departure: "08:10", stop_no: 2, platform: "1", halt_min: 10, distance_km: 138 },
+    { schedule_id: 25, train_number: "12007", station_id: "MAS", station_name: "Chennai Central", arrival: "14:15", departure: "--", stop_no: 3, platform: "2A", halt_min: 0, distance_km: 636 },
+
+    // 12125 Pragati Express
+    { schedule_id: 26, train_number: "12125", station_id: "MMCT", station_name: "Mumbai Central", arrival: "--", departure: "16:25", stop_no: 1, platform: "12", halt_min: 0, distance_km: 0 },
+    { schedule_id: 27, train_number: "12125", station_id: "PNVL", station_name: "Panvel Junction", arrival: "17:28", departure: "17:30", stop_no: 2, platform: "5", halt_min: 2, distance_km: 68 },
+    { schedule_id: 28, train_number: "12125", station_id: "PUNE", station_name: "Pune Junction", arrival: "19:50", departure: "--", stop_no: 3, platform: "2", halt_min: 0, distance_km: 193 },
+
+    // 22436 Vande Bharat Express
+    { schedule_id: 29, train_number: "22436", station_id: "NDLS", station_name: "New Delhi", arrival: "--", departure: "06:00", stop_no: 1, platform: "16", halt_min: 0, distance_km: 0 },
+    { schedule_id: 30, train_number: "22436", station_id: "CNB", station_name: "Kanpur Central", arrival: "10:08", departure: "10:10", stop_no: 2, platform: "5", halt_min: 2, distance_km: 440 },
+    { schedule_id: 31, train_number: "22436", station_id: "ALLP", station_name: "Prayagraj Junction", arrival: "12:08", departure: "12:10", stop_no: 3, platform: "6", halt_min: 2, distance_km: 635 },
+    { schedule_id: 32, train_number: "22436", station_id: "BSB", station_name: "Varanasi Junction", arrival: "14:00", departure: "--", stop_no: 4, platform: "1", halt_min: 0, distance_km: 759 },
+
+    // 12002 Bhopal Shatabdi
+    { schedule_id: 33, train_number: "12002", station_id: "NDLS", station_name: "New Delhi", arrival: "--", departure: "06:00", stop_no: 1, platform: "1", halt_min: 0, distance_km: 0 },
+    { schedule_id: 34, train_number: "12002", station_id: "AGC", station_name: "Agra Cantt", arrival: "07:50", departure: "07:55", stop_no: 2, platform: "1", halt_min: 5, distance_km: 196 },
+    { schedule_id: 35, train_number: "12002", station_id: "GWL", station_name: "Gwalior Junction", arrival: "09:23", departure: "09:28", stop_no: 3, platform: "1", halt_min: 5, distance_km: 316 },
+    { schedule_id: 36, train_number: "12002", station_id: "BPL", station_name: "Bhopal Junction", arrival: "14:40", departure: "--", stop_no: 4, platform: "1", halt_min: 0, distance_km: 708 },
+  ],
+
+  // ============================================================
+  // CONSTRUCTION BLOCKS TABLE (Track Closures & Maintenance)
+  // ============================================================
+  construction_blocks: [
+    { block_id: 101, track_id: "T003", section: "GWL → BPL", start_time: "2026-09-07 06:00", end_time: "2026-09-09 18:00", reason: "Bridge girder reinforcement & track realignment", priority: "HIGH", status: "ACTIVE" },
+    { block_id: 102, track_id: "T007", section: "SC → SBC", start_time: "2026-09-07 02:30", end_time: "2026-09-10 12:00", reason: "Flash flood ballast washout emergency restoration", priority: "CRITICAL", status: "ACTIVE" },
+    { block_id: 103, track_id: "T018", section: "GKP → PAT", start_time: "2026-09-07 09:15", end_time: "2026-09-08 20:00", reason: "Track subsidence remedial work and sleeper renewal", priority: "HIGH", status: "ACTIVE" },
+    { block_id: 104, track_id: "T030", section: "KZJ → BZA", start_time: "2026-09-07 11:00", end_time: "2026-09-09 08:00", reason: "Electronic interlocking & signaling upgrade", priority: "CRITICAL", status: "ACTIVE" },
+    { block_id: 105, track_id: "T048", section: "MAS → MYS", start_time: "2026-09-06 22:00", end_time: "2026-09-08 14:00", reason: "Post-derailment permanent way ultrasonic testing", priority: "HIGH", status: "ACTIVE" },
+    { block_id: 106, track_id: "T073", section: "SUR → GTL", start_time: "2026-09-07 08:45", end_time: "2026-09-08 18:00", reason: "Heavy monsoon waterlogging clearance & drainage", priority: "MEDIUM", status: "ACTIVE" },
+    { block_id: 107, track_id: "T086", section: "ET → SBC", start_time: "2026-09-01 00:00", end_time: "2026-09-30 23:59", reason: "Section electrification and track doubling project", priority: "HIGH", status: "SCHEDULED" },
+  ],
+
+  // ============================================================
+  // TRAFFIC DECISIONS TABLE (Diverted / Rescheduled Trains)
+  // ============================================================
+  traffic_decisions: [
+    { decision_id: 201, train_number: "12007", train_name: "Mysuru Shatabdi", block_id: 105, decision: "DIVERT", original_route: "SBC → MYS → MAS (via T048)", recommended_route: "SBC → Jolarpettai → MAS (via T008)", delay_minutes: 65, reason: "Avoid blocked section T048 (derailment inspection)", status: "DISPATCHED" },
+    { decision_id: 202, train_number: "12951", train_name: "Mumbai Rajdhani", block_id: 101, decision: "DIVERT", original_route: "NDLS → AGC → GWL → BPL → MMCT", recommended_route: "NDLS → JP → KOTA → RTM → MMCT", delay_minutes: 45, reason: "Bypass T003 bridge girder repair", status: "ACTIVE" },
+    { decision_id: 203, train_number: "22691", train_name: "Bengaluru Rajdhani", block_id: 102, decision: "DIVERT", original_route: "SBC → SC → NGP → BPL → NDLS", recommended_route: "SBC → UBL → PUNE → BPL → NDLS", delay_minutes: 80, reason: "Avoid SC-SBC flash flood closure", status: "ACTIVE" },
+    { decision_id: 204, train_number: "12301", train_name: "Howrah Rajdhani", block_id: 103, decision: "NORMAL", original_route: "HWH → DHN → GAYA → BSB → CNB → NDLS", recommended_route: "Normal Grand Chord Mainline", delay_minutes: 0, reason: "Route clear; no conflict with GKP-PAT subsidence", status: "NORMAL" },
+  ],
+
+  // ============================================================
+  // DATABASE STATUS (Mirror of app.py MySQL database)
+  // ============================================================
+  database_status: {
+    database: "railway_system",
+    status: "Synchronized & Static-Ready",
+    tables: {
+      stations: 88,
+      tracks: 90,
+      trains: 8,
+      schedules: 36,
+      construction_blocks: 7,
+      traffic_decisions: 4,
+    }
+  }
+};
+
+// Mirroring the Flask backend API in the browser
+window.RailwayAPI = {
+  getStatus: () => Promise.resolve(RAILWAY_DATABASE.database_status),
+  getStations: () => Promise.resolve(RAILWAY_DATABASE.stations),
+  getTracks: () => Promise.resolve(RAILWAY_DATABASE.tracks),
+  getTrains: () => Promise.resolve(RAILWAY_DATABASE.trains),
+  getSchedules: (num) => Promise.resolve(num ? RAILWAY_DATABASE.schedules.filter(s => s.train_number === String(num)) : RAILWAY_DATABASE.schedules),
+  getConstructionBlocks: () => Promise.resolve(RAILWAY_DATABASE.construction_blocks),
+  getTrafficDecisions: () => Promise.resolve(RAILWAY_DATABASE.traffic_decisions),
 };

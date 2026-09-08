@@ -433,6 +433,8 @@ function switchTab(tab) {
 
   if (tab === 'map') setTimeout(() => initMap(), 50);
   if (tab === 'tracks') renderTracksGrid();
+  if (tab === 'trains') renderTrains();
+  if (tab === 'schedules') renderSchedulesTab();
   if (tab === 'my-queries') renderMyQueries();
   if (tab === 'repair-jobs') renderRepairJobs();
   if (tab === 'my-route') renderMyRoute();
@@ -1248,6 +1250,257 @@ function renderTrains() {
         </div>
       </div>`;
   }).join('');
+}
+
+// ─────────────────────────────────────────────────────────────
+// SCHEDULES & DATABASE EXPLORER
+// ─────────────────────────────────────────────────────────────
+let currentDbSubView = 'schedules';
+let selectedScheduleTrain = 'ALL';
+
+function switchDbSubView(view) {
+  currentDbSubView = view;
+  document.querySelectorAll('.db-view-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.id === `dbvb-${view}`);
+  });
+  renderSchedulesTab();
+}
+
+function renderSchedulesTab() {
+  const container = document.getElementById('schedules-content');
+  if (!container) return;
+
+  if (currentDbSubView === 'schedules') {
+    renderSchedulesView(container);
+  } else if (currentDbSubView === 'blocks') {
+    renderConstructionBlocksView(container);
+  } else if (currentDbSubView === 'decisions') {
+    renderTrafficDecisionsView(container);
+  } else if (currentDbSubView === 'status') {
+    renderDatabaseStatusView(container);
+  }
+}
+
+function renderSchedulesView(container) {
+  const trains = RAILWAY_DATABASE.trains;
+  const filtered = selectedScheduleTrain === 'ALL'
+    ? RAILWAY_DATABASE.schedules
+    : RAILWAY_DATABASE.schedules.filter(s => s.train_number === selectedScheduleTrain);
+
+  container.innerHTML = `
+    <div class="data-table-card">
+      <div class="data-table-header">
+        <div>
+          <h3>Train Timetable & Stoppages</h3>
+          <span style="font-size:12px;color:var(--gray-400);">Displaying official timetables, platform assignments, and halt durations</span>
+        </div>
+        <div>
+          <select class="filter-select" id="schedule-train-select" onchange="filterScheduleByTrain(this.value)">
+            <option value="ALL" ${selectedScheduleTrain === 'ALL' ? 'selected' : ''}>All Trains (${trains.length})</option>
+            ${trains.map(t => `<option value="${t.id}" ${selectedScheduleTrain === t.id ? 'selected' : ''}>${t.id} – ${t.name}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="data-table-wrapper">
+        <table class="ir-table">
+          <thead>
+            <tr>
+              <th>Train #</th>
+              <th>Train Name</th>
+              <th>Stop #</th>
+              <th>Station</th>
+              <th>Arr. Time</th>
+              <th>Dep. Time</th>
+              <th>Halt</th>
+              <th>Platform</th>
+              <th>Distance</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filtered.map(s => {
+              const tr = RAILWAY_DATABASE.trains.find(t => t.id === s.train_number);
+              return `
+                <tr>
+                  <td><strong style="color:var(--blue-700);">${s.train_number}</strong></td>
+                  <td>${tr ? tr.name : '–'}</td>
+                  <td><span class="badge" style="background:#e0e7ff;color:#3730a3;padding:2px 8px;border-radius:12px;font-weight:700;font-size:11px;">#${s.stop_no}</span></td>
+                  <td><strong>${s.station_name}</strong> <span style="color:var(--gray-400);font-size:11px;">(${s.station_id})</span></td>
+                  <td style="font-family:monospace;font-weight:600;">${s.arrival}</td>
+                  <td style="font-family:monospace;font-weight:600;">${s.departure}</td>
+                  <td>${s.halt_min > 0 ? `<span style="color:#d97706;font-weight:600;">${s.halt_min} min</span>` : '<span style="color:var(--gray-400);">Source/Dest</span>'}</td>
+                  <td><strong style="color:var(--blue-600);background:var(--blue-50);padding:2px 8px;border-radius:4px;">PF ${s.platform}</strong></td>
+                  <td>${s.distance_km} km</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function filterScheduleByTrain(val) {
+  selectedScheduleTrain = val;
+  renderSchedulesTab();
+}
+
+function renderConstructionBlocksView(container) {
+  const blocks = RAILWAY_DATABASE.construction_blocks || [];
+  container.innerHTML = `
+    <div class="data-table-card">
+      <div class="data-table-header">
+        <div>
+          <h3>Active Construction & Maintenance Blocks</h3>
+          <span style="font-size:12px;color:var(--gray-400);">Direct feed from Railway System backend maintenance schedule</span>
+        </div>
+        <span class="ir-badge priority-high">${blocks.filter(b => b.status === 'ACTIVE').length} Active Blocks</span>
+      </div>
+      <div class="data-table-wrapper">
+        <table class="ir-table">
+          <thead>
+            <tr>
+              <th>Block ID</th>
+              <th>Track Section</th>
+              <th>Start Time</th>
+              <th>Est. Completion</th>
+              <th>Reason / Work Description</th>
+              <th>Priority</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${blocks.map(b => `
+              <tr>
+                <td><strong>#BLK-${b.block_id}</strong></td>
+                <td><strong style="color:var(--blue-700);">${b.track_id}</strong> (${b.section})</td>
+                <td style="font-size:12px;font-family:monospace;">${b.start_time}</td>
+                <td style="font-size:12px;font-family:monospace;">${b.end_time}</td>
+                <td style="max-width:280px;font-size:12px;">${b.reason}</td>
+                <td><span class="ir-badge priority-${b.priority.toLowerCase()}">${b.priority}</span></td>
+                <td><span class="ir-badge status-${b.status.toLowerCase()}">${b.status}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function renderTrafficDecisionsView(container) {
+  const decisions = RAILWAY_DATABASE.traffic_decisions || [];
+  container.innerHTML = `
+    <div class="data-table-card">
+      <div class="data-table-header">
+        <div>
+          <h3>Traffic Rerouting & Optimization Decisions</h3>
+          <span style="font-size:12px;color:var(--gray-400);">Autonomous decisions generated by deviation algorithm</span>
+        </div>
+        <span class="ir-badge decision-divert">${decisions.length} Decisions Logged</span>
+      </div>
+      <div class="data-table-wrapper">
+        <table class="ir-table">
+          <thead>
+            <tr>
+              <th>Decision ID</th>
+              <th>Train</th>
+              <th>Action</th>
+              <th>Original Path</th>
+              <th>Recommended Reroute</th>
+              <th>Delay Impact</th>
+              <th>Reason</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${decisions.map(d => `
+              <tr>
+                <td><strong>#DEC-${d.decision_id}</strong></td>
+                <td><strong>${d.train_number}</strong> <span style="color:var(--gray-500);font-size:11px;">${d.train_name}</span></td>
+                <td><span class="ir-badge decision-${d.decision.toLowerCase()}">${d.decision}</span></td>
+                <td style="font-size:12px;color:var(--gray-500);">${d.original_route}</td>
+                <td style="font-size:12px;font-weight:600;color:var(--blue-700);">${d.recommended_route}</td>
+                <td><span style="font-weight:700;color:${d.delay_minutes > 0 ? '#d97706' : '#059669'};">${d.delay_minutes > 0 ? '+' + d.delay_minutes + ' min' : 'On Schedule'}</span></td>
+                <td style="font-size:12px;max-width:220px;">${d.reason}</td>
+                <td><span class="ir-badge status-completed">${d.status}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function renderDatabaseStatusView(container) {
+  const db = RAILWAY_DATABASE.database_status;
+  const tables = db.tables;
+
+  container.innerHTML = `
+    <div class="db-stats-grid">
+      <div class="db-stat-card">
+        <span class="db-stat-num">${tables.stations}</span>
+        <span class="db-stat-label">Stations</span>
+        <span class="db-stat-table">table: stations</span>
+      </div>
+      <div class="db-stat-card">
+        <span class="db-stat-num">${tables.tracks}</span>
+        <span class="db-stat-label">Railway Tracks</span>
+        <span class="db-stat-table">table: tracks</span>
+      </div>
+      <div class="db-stat-card">
+        <span class="db-stat-num">${tables.trains}</span>
+        <span class="db-stat-label">Active Trains</span>
+        <span class="db-stat-table">table: trains</span>
+      </div>
+      <div class="db-stat-card">
+        <span class="db-stat-num">${tables.schedules}</span>
+        <span class="db-stat-label">Schedules / Stops</span>
+        <span class="db-stat-table">table: schedules</span>
+      </div>
+      <div class="db-stat-card">
+        <span class="db-stat-num">${tables.construction_blocks}</span>
+        <span class="db-stat-label">Construction Blocks</span>
+        <span class="db-stat-table">table: construction_blocks</span>
+      </div>
+      <div class="db-stat-card">
+        <span class="db-stat-num">${tables.traffic_decisions}</span>
+        <span class="db-stat-label">Traffic Decisions</span>
+        <span class="db-stat-table">table: traffic_decisions</span>
+      </div>
+    </div>
+
+    <div class="data-table-card">
+      <div class="data-table-header">
+        <div>
+          <h3>MySQL Schema & Static Synchronization Status</h3>
+          <span style="font-size:12px;color:var(--gray-400);">Database: <code>${db.database}</code> • Status: <strong>${db.status}</strong></span>
+        </div>
+        <button class="filter-select" style="cursor:pointer;" onclick="exportDatabaseJson()">📥 Export JSON Data</button>
+      </div>
+      <div style="padding:20px;line-height:1.6;font-size:13px;color:var(--gray-600);">
+        <p><strong>Architecture Note:</strong> When deployed to GitHub Pages (which is a static hosting environment without a continuous Python/MySQL daemon), the complete relational dataset from <code>app.py</code> and <code>database.xlsx</code> is bundled directly into the client runtime via <code>data/railway_network.js</code> and accessible via <code>window.RailwayAPI</code>.</p>
+        <div style="margin-top:14px;background:#f8fafc;padding:14px;border-radius:8px;border:1px solid #e2e8f0;font-family:monospace;font-size:12px;">
+          <div>✓ Stations: 88 records (NR, WR, SR, ER, SWR, CR, WCR, ECR, ECoR, NFR, NWR, NCR, KR)</div>
+          <div>✓ Tracks: 90 tracks with bidirectional graph, max speeds, distances</div>
+          <div>✓ Trains: 8 premium trains with live tracking & speed telemetry</div>
+          <div>✓ Schedules: 36 stop timetables with platform assignments</div>
+          <div>✓ Construction Blocks: 7 active and scheduled blocks</div>
+          <div>✓ Traffic Decisions: 4 real-time reroutes with Dijkstra graph traversal</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function exportDatabaseJson() {
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(RAILWAY_DATABASE, null, 2));
+  const dlAnchor = document.createElement('a');
+  dlAnchor.setAttribute("href", dataStr);
+  dlAnchor.setAttribute("download", "railway_system_database.json");
+  dlAnchor.click();
+  showToast("Database JSON exported successfully!", "success");
 }
 
 // ─────────────────────────────────────────────────────────────
