@@ -1,5 +1,5 @@
 /* ============================================================
-   TRAINSYN – INDIAN RAILWAYS IMS
+   TRAINSYNC – INDIAN RAILWAYS IMS
    Main Application Script – v2.0
    ============================================================ */
 
