@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TrainSync – System Architecture & Technical Documentation</title>
+<style>
+  @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap");
+  
+  @page {
+    size: A4;
+    margin: 18mm 16mm 18mm 16mm;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "Inter", -apple-system, sans-serif;
+    color: #1e293b;
+    background: #ffffff;
+    line-height: 1.6;
+    font-size: 10.5pt;
+  }
+
+  .cover {
+    padding: 20px 0 20px 0;
+    border-bottom: 2px solid #2563eb;
+    margin-bottom: 24px;
+  }
+
+  .badge-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .badge {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-size: 8.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  h1 {
+    font-family: "Rajdhani", sans-serif;
+    font-size: 28pt;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    font-size: 12pt;
+    color: #475569;
+    margin-bottom: 15px;
+  }
+
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 9pt;
+  }
+
+  .meta-item strong { display: block; color: #0f172a; font-size: 9.5pt; }
+  .meta-item span { color: #64748b; }
+
+  h2 {
+    font-family: "Rajdhani", sans-serif;
+    font-size: 17pt;
+    color: #0f172a;
+    border-bottom: 1.5px solid #e2e8f0;
+    padding-bottom: 6px;
+    margin-top: 24px;
+    margin-bottom: 10px;
+    page-break-after: avoid;
+  }
+
+  h3 {
+    font-size: 11.5pt;
+    font-weight: 700;
+    color: #1e40af;
+    margin-top: 14px;
+    margin-bottom: 6px;
+    page-break-after: avoid;
+  }
+
+  p { margin-bottom: 8px; text-align: justify; }
+
+  ul, ol { margin-left: 20px; margin-bottom: 10px; }
+  li { margin-bottom: 3px; }
+
+  .callout {
+    background: #f0f9ff;
+    border-left: 4px solid #0284c7;
+    padding: 10px 14px;
+    border-radius: 0 8px 8px 0;
+    margin: 12px 0;
+    font-size: 9.5pt;
+  }
+
+  .callout.alert {
+    background: #fef2f2;
+    border-left-color: #ef4444;
+  }
+
+  .callout.success {
+    background: #f0fdf4;
+    border-left-color: #22c55e;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 9pt;
+  }
+
+  th, td {
+    padding: 7px 10px;
+    border: 1px solid #e2e8f0;
+    text-align: left;
+  }
+
+  th {
+    background: #f8fafc;
+    color: #334155;
+    font-weight: 700;
+  }
+
+  tr:nth-child(even) td { background: #fafafa; }
+
+  code {
+    font-family: "JetBrains Mono", monospace;
+    background: #f1f5f9;
+    color: #0f172a;
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-size: 8.5pt;
+  }
+
+  pre {
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8pt;
+    overflow-x: auto;
+    margin: 10px 0;
+    line-height: 1.4;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 12px 0;
+  }
+
+  .card {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: #f8fafc;
+  }
+
+  .card h4 {
+    font-size: 10pt;
+    color: #0f172a;
+    margin-bottom: 4px;
+  }
+
+  .card p { font-size: 8.5pt; color: #475569; margin: 0; text-align: left; }
+
+  .page-break { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<!-- COVER SECTION -->
+<div class="cover">
+  <div class="badge-row">
+    <span class="badge">Official Technical Notes</span>
+    <span class="badge">Version 2.0</span>
+    <span class="badge">Indian Railways IMS</span>
+  </div>
+  <h1>TRAINSYNC — SYSTEM ARCHITECTURE & TECHNICAL DOCUMENTATION</h1>
+  <div class="subtitle">Next-Generation Intelligent Railway Traffic Management, Dynamic Track Deviation, & Infrastructure Portal</div>
+  
+  <div class="meta-grid">
+    <div class="meta-item">
+      <strong>Project Name</strong>
+      <span>TrainSync (Indian Railways IMS)</span>
+    </div>
+    <div class="meta-item">
+      <strong>Dataset Origin</strong>
+      <span>database.xlsx & MySQL Backend</span>
+    </div>
+    <div class="meta-item">
+      <strong>Network Scope</strong>
+      <span>Northern Railway (Delhi Division)</span>
+    </div>
+    <div class="meta-item">
+      <strong>Live Deployment</strong>
+      <span>GitHub Pages Global Edge CDN</span>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 1 -->
+<h2>1. Executive Summary & Core Objective</h2>
+<p>
+  <strong>TrainSync</strong> is an enterprise-grade railway operations and infrastructure management platform modeled after the real-world operational workflows of <strong>Indian Railways</strong>. It unifies network visualization, track health monitoring, live locomotive tracking, and autonomous conflict resolution into a unified, responsive interface.
+</p>
+<p>
+  The primary technical objective of TrainSync is <strong>automated real-time track deviation</strong>. In high-density railway networks, sudden blockages—such as flash flooding, structural track defects, sleeper replacements, or signal breakdowns—can cause cascading delays across the entire division. TrainSync solves this by coupling live telemetry with <strong>Dijkstra's shortest path graph algorithm</strong> to compute optimal detour routes and transmit instant reroute instructions to Station Masters and Loco Pilots.
+</p>
+
+<!-- SECTION 2 -->
+<h2>2. Complete Technology Stack</h2>
+<p>
+  TrainSync is constructed with a modern, high-performance web and data engineering stack:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Layer</th>
+      <th>Technology / Tool</th>
+      <th>Role & Implementation Architecture</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Frontend Structure</strong></td>
+      <td>Semantic HTML5</td>
+      <td>Document Object Model structure, canvas containers, navigation menus, accessible role views, and SVG icons.</td>
+    </tr>
+    <tr>
+      <td><strong>Styling & Design System</strong></td>
+      <td>Vanilla CSS3 (Design Tokens)</td>
+      <td>Dark-mode glassmorphism, responsive grid & flexbox layouts, GPU-accelerated keyframe animations, and custom scrollbars.</td>
+    </tr>
+    <tr>
+      <td><strong>Typography</strong></td>
+      <td>Google Fonts (Orbitron, Rajdhani, Inter)</td>
+      <td>Futuristic heads-up displays, railway station signage styling, and monospace data typography.</td>
+    </tr>
+    <tr>
+      <td><strong>Geospatial Map Engine</strong></td>
+      <td>HTML5 2D Canvas API</td>
+      <td>60FPS hardware-accelerated railway map, Mercator geographic projection, Bezier curves, animated dual rails, and station pins.</td>
+    </tr>
+    <tr>
+      <td><strong>Routing Algorithm</strong></td>
+      <td>Dijkstra's Algorithm (Priority Queue)</td>
+      <td>Bidirectional weighted graph traversal, real-time edge exclusion for blocked tracks, distance computation, and delay estimation.</td>
+    </tr>
+    <tr>
+      <td><strong>State Management</strong></td>
+      <td>Reactive App State + Web Storage API</td>
+      <td>Centralized <code>APP</code> state machine with persistent <code>localStorage</code> for work queries, maintenance jobs, and dispatched deviations.</td>
+    </tr>
+    <tr>
+      <td><strong>Backend Engine</strong></td>
+      <td>Python 3 + Flask</td>
+      <td>RESTful API endpoints (<code>/api/database</code>, <code>/api/stations</code>, <code>/api/tracks</code>, <code>/api/analyze</code>, <code>/api/construction</code>).</td>
+    </tr>
+    <tr>
+      <td><strong>Database & Storage</strong></td>
+      <td>MySQL 8.0 + OpenXML Parser</td>
+      <td>Relational 7-table schema with automated data ingestion from <code>database.xlsx</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>Deployment & CI/CD</strong></td>
+      <td>Git + GitHub Pages Edge CDN</td>
+      <td>Global static hosting, automated Git deployments, zero-downtime branch publication.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<!-- SECTION 3 -->
+<h2>3. System Architecture & Dual-Mode Pipeline</h2>
+<p>
+  TrainSync implements a dual-mode deployment pipeline to support both edge environments and full server enterprise deployments:
+</p>
+
+<div class="card-grid">
+  <div class="card">
+    <h4>🌐 Edge Pipeline (GitHub Pages)</h4>
+    <p>
+      GitHub Pages hosts static assets over a global CDN. The complete relational database parsed from <code>database.xlsx</code> is serialized into structured JSON inside <code>data/railway_network.js</code> and surfaced through a browser API mirror (<code>window.RailwayAPI</code>). Pathfinding and UI updates run client-side with 0ms server latency.
+    </p>
+  </div>
+  <div class="card">
+    <h4>⚙️ Server Microservice (Python / MySQL)</h4>
+    <p>
+      For backend enterprise installations, <code>app.py</code> executes as a Flask microservice connected to MySQL. It parses <code>database.xlsx</code>, manages persistent SQL tables, and exposes REST endpoints for external systems.
+    </p>
+  </div>
+</div>
+
+<pre>
+┌────────────────────────────────────────────────────────────────────────┐
+│                        TRAINSYNC PLATFORM CORE                         │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+           ┌────────────────────────┴────────────────────────┐
+           ▼                                                 ▼
+┌───────────────────────┐                         ┌───────────────────────┐
+│  GITHUB PAGES (EDGE)  │                         │  PYTHON FLASK / MYSQL │
+│  - index.html         │                         │  - app.py             │
+│  - styles/main.css    │                         │  - database.xlsx      │
+│  - scripts/app.js     │                         │  - MySQL 8.0 schema   │
+│  - railway_network.js │                         │  - REST API endpoints │
+└──────────┬────────────┘                         └──────────┬────────────┘
+           │                                                 │
+           └────────────────────────┬────────────────────────┘
+                                    ▼
+       ┌────────────────────────────────────────────────────────┐
+       │                CLIENT PRESENTATION LAYER               │
+       │  - 2D Canvas Map Engine (Mercator Projection)          │
+       │  - Dijkstra Deviation & Detour Engine                  │
+       │  - Role Portals (Station Master, Engineer, Pilot)      │
+       │  - Central Timetables & Database Inspector             │
+       └────────────────────────────────────────────────────────┘
+</pre>
+
+<!-- SECTION 4 -->
+<h2>4. Detailed Component Functionality</h2>
+
+<h3>4.1. Animated Splash / Flash Screen</h3>
+<ul>
+  <li><strong>Particle Spark Canvas:</strong> Simulates wheel-rail friction sparks using a custom particle physics vector engine with decay rates, random velocities, and radial alpha gradients.</li>
+  <li><strong>Locomotive Vector Art:</strong> A pure CSS-drawn steam engine and passenger coaches with glowing windows, animated wheels, and timed chimney steam puffs.</li>
+  <li><strong>Staged System Initializer:</strong> Simulates progressive authentication, database pre-loading, and route graph construction before launching the dashboard.</li>
+</ul>
+
+<h3>4.2. Geospatial Railway Map (Google Maps Style)</h3>
+<ul>
+  <li><strong>Mercator Geographic Projection:</strong> Maps 60 stations across Northern Railway (Delhi Division) bounded between 28.1525°N – 28.8465°N and 76.7522°E – 77.8181°E:
+    <pre>x = pad_x + ((lon - min_lon) / (max_lon - min_lon)) * (width - 2 * pad_x)
+y = pad_y + ((max_lat - lat) / (max_lat - min_lat)) * (height - 2 * pad_y)</pre>
+  </li>
+  <li><strong>Double-Rail Rendering:</strong> Computes normal vectors perpendicular to track angles to render realistic parallel rails with sleeper ties.</li>
+  <li><strong>Interactive Track Hitboxes:</strong> Computes point-to-line segment distances to allow instant clicking and hovering over any track section for real-time status inspection.</li>
+  <li><strong>Color-Coded Statuses:</strong>
+    <ul>
+      <li>🟢 <strong>Available:</strong> Emerald green double-rail with speed limit tags.</li>
+      <li>🔴 <strong>Maintenance / Closed:</strong> Dashed red glowing lines with pulsing warning markers.</li>
+      <li>🟡 <strong>Busy:</strong> Amber track indicating line congestion.</li>
+      <li>🟠 <strong>Active Deviation:</strong> Neon orange route with animated direction chevrons.</li>
+    </ul>
+  </li>
+</ul>
+
+<div class="page-break"></div>
+
+<h3>4.3. Real-Time Autonomous Train Deviation System</h3>
+<p>
+  When track maintenance or emergency closures occur (e.g. <code>TRK006</code> New Delhi → Delhi Cantt or <code>TRK009</code> Gurugram → Garhi Harsaru), the deviation system operates in five automated steps:
+</p>
+<ol>
+  <li><strong>Conflict Detection:</strong> Scans active train route sequences against the <code>construction_blocks</code> table.</li>
+  <li><strong>Graph Reconstruction:</strong> Generates an adjacency graph of available tracks, removing all blocked edges.</li>
+  <li><strong>Dijkstra Shortest Path Search:</strong> Computes the minimal-distance path from the train's current position to its destination:
+    <pre>dist[v] = min(dist[v], dist[u] + weight(u, v))</pre>
+  </li>
+  <li><strong>Delay & Metrics Calculation:</strong> Calculates excess distance in kilometers, estimated travel time based on track speed limits, and logs a formal <code>traffic_decision</code> record.</li>
+  <li><strong>Dual Broadcast Dispatch:</strong>
+    <ul>
+      <li><strong>Station Master:</strong> Previews the diversion path directly on the map, approves the decision, and transmits reroute telemetry.</li>
+      <li><strong>Loco Pilot:</strong> The cab Heads-Up Display (HUD) immediately updates with the detour corridor, updated signals, and clearance flags.</li>
+    </ul>
+  </li>
+</ol>
+
+<h3>4.4. Role-Based Specialized Portals</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Portal / Role</th>
+      <th>Primary Tools & User Capabilities</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Station Master</strong></td>
+      <td>Division network map, track status toggling, emergency deviation modal, repair query creation, train scheduling oversight.</td>
+    </tr>
+    <tr>
+      <td><strong>Repair Engineer</strong></td>
+      <td>Construction block tracker, maintenance order management, damage diagnosis (rail fractures, flood subsidence, signaling defects).</td>
+    </tr>
+    <tr>
+      <td><strong>Loco Pilot</strong></td>
+      <td>Cab cockpit HUD, live speed telemetry, speed limit enforcement alerts, section clearance indicators, diversion notification panel.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- SECTION 5 -->
+<h2>5. Relational Database Schema (from database.xlsx)</h2>
+<p>
+  The platform dataset represents the complete Northern Railway Delhi regional division:
+</p>
+<ul>
+  <li><code>stations</code> (60 records): <code>station_id</code>, <code>station_name</code>, <code>code</code>, <code>region</code>, <code>latitude</code>, <code>longitude</code>, <code>station_type</code>.</li>
+  <li><code>tracks</code> (34 records): <code>track_id</code>, <code>source_station_id</code>, <code>destination_station_id</code>, <code>distance_km</code>, <code>speed_limit</code>, <code>capacity</code>, <code>status</code>.</li>
+  <li><code>trains</code> (26 records): <code>train_id</code>, <code>train_number</code>, <code>train_name</code>, <code>train_type</code>, <code>priority</code>, <code>max_speed</code>, <code>length_m</code>.</li>
+  <li><code>schedules</code> (122 records): <code>schedule_id</code>, <code>train_id</code>, <code>station_id</code>, <code>arrival_time</code>, <code>departure_time</code>, <code>platform</code>.</li>
+  <li><code>routes</code> (96 records): <code>route_id</code>, <code>train_id</code>, <code>track_id</code>, <code>sequence_number</code>, <code>distance_km</code>.</li>
+  <li><code>construction_blocks</code> (5 active): <code>block_id</code>, <code>track_id</code>, <code>start_time</code>, <code>end_time</code>, <code>reason</code>, <code>priority</code>.</li>
+  <li><code>traffic_decisions</code> (8 decisions): <code>decision_id</code>, <code>train_number</code>, <code>decision</code>, <code>recommended_route</code>, <code>delay_minutes</code>.</li>
+</ul>
+
+<!-- SECTION 6 -->
+<h2>6. Deployment Information & Quick Links</h2>
+<div class="callout success">
+  <strong>Live Website Deployment:</strong><br>
+  URL: <code>https://jiyag307-eng.github.io/main/</code><br>
+  GitHub Repository: <code>https://github.com/jiyag307-eng/main</code> (Branch: <code>main</code>)<br>
+  PDF Notes File: <code>TrainSync_Documentation_and_Notes.pdf</code> in project root.
+</div>
+
+</body>
+</html>
