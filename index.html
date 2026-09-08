@@ -3,27 +3,71 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Indian Railways Integrated Management System – Secure portal for Station Masters, Repair Engineers, and Loco Pilots." />
+  <meta name="description" content="TrainSyn – Indian Railways Integrated Management System. Secure portal for Station Masters, Repair Engineers, and Loco Pilots." />
   <meta name="theme-color" content="#0d2b6e" />
-  <title>Indian Railways – Integrated Management System</title>
+  <title>TrainSyn – Indian Railways IMS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles/main.css" />
 </head>
 <body>
 
 <!-- ======================================================
-     SPLASH / LOADING SCREEN
+     SPLASH / FLASH SCREEN
      ====================================================== -->
 <div id="splash-screen" class="splash-screen">
-  <div class="splash-logo">
-    <img src="assets/indian_railways_logo.jpg" alt="Indian Railways Logo" />
-    <h1>Indian Railways</h1>
-    <p>Integrated Management System</p>
+  <!-- Animated track background -->
+  <div class="splash-track-bg">
+    <div class="splash-rail splash-rail-1"></div>
+    <div class="splash-rail splash-rail-2"></div>
+    <div class="splash-sleepers-row" id="splash-sleepers"></div>
+  </div>
+
+  <!-- Particle sparks canvas -->
+  <canvas id="splash-particles" class="splash-particles-canvas"></canvas>
+
+  <!-- Animated Train -->
+  <div class="splash-train-wrapper" id="splash-train">
+    <div class="splash-train">
+      <div class="st-engine">
+        <div class="st-cabin"></div>
+        <div class="st-nose"></div>
+        <div class="st-front-light"></div>
+        <div class="st-chimney"></div>
+        <div class="st-smoke" id="st-smoke"></div>
+      </div>
+      <div class="st-coach st-coach-1"><div class="st-windows"><span></span><span></span><span></span></div></div>
+      <div class="st-coach st-coach-2"><div class="st-windows"><span></span><span></span><span></span></div></div>
+      <div class="st-coach st-coach-3"><div class="st-windows"><span></span><span></span><span></span></div></div>
+      <div class="st-wheels">
+        <div class="st-wheel"></div><div class="st-wheel"></div>
+        <div class="st-wheel"></div><div class="st-wheel"></div>
+        <div class="st-wheel"></div><div class="st-wheel"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Central branding -->
+  <div class="splash-center">
+    <div class="splash-logo-ring">
+      <img src="assets/indian_railways_logo.jpg" alt="Indian Railways Logo" class="splash-logo-img" />
+      <div class="splash-ring-pulse"></div>
+    </div>
+    <div class="splash-brand-name">
+      <span class="sbn-train">TRAIN</span><span class="sbn-syn">SYN</span>
+    </div>
+    <div class="splash-tagline">Indian Railways Integrated Management System</div>
+
     <div class="splash-loader">
-      <div class="loader-bar"><div class="loader-fill"></div></div>
-      <span>Initializing secure portal…</span>
+      <div class="splash-progress-bar">
+        <div class="splash-progress-fill" id="splash-progress-fill"></div>
+        <div class="splash-progress-glow"></div>
+      </div>
+      <div class="splash-status-row">
+        <span class="splash-status-text" id="splash-status-text">Initialising secure portal…</span>
+        <span class="splash-pct" id="splash-pct">0%</span>
+      </div>
     </div>
   </div>
 </div>
@@ -69,13 +113,12 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <rect x="2" y="7" width="20" height="14" rx="2"/>
                 <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-                <line x1="12" y1="12" x2="12" y2="16"/>
-                <line x1="10" y1="14" x2="14" y2="14"/>
+                <line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>
               </svg>
             </div>
             <div class="role-card-info">
               <h3>Station Master</h3>
-              <p>Railway Station Operations & Management</p>
+              <p>Railway Station Operations &amp; Management</p>
               <div class="role-badge">SM</div>
             </div>
             <div class="role-card-arrow">
@@ -93,7 +136,7 @@
             </div>
             <div class="role-card-info">
               <h3>Repair Engineer</h3>
-              <p>Track, Signal & Infrastructure Maintenance</p>
+              <p>Track, Signal &amp; Infrastructure Maintenance</p>
               <div class="role-badge">RE</div>
             </div>
             <div class="role-card-arrow">
@@ -108,14 +151,12 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <rect x="2" y="11" width="20" height="8" rx="2"/>
                 <path d="M4 11V7a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v4"/>
-                <circle cx="7" cy="19" r="2"/>
-                <circle cx="17" cy="19" r="2"/>
-                <path d="M9 19h6"/>
+                <circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/><path d="M9 19h6"/>
               </svg>
             </div>
             <div class="role-card-info">
               <h3>Loco Pilot</h3>
-              <p>Locomotive Operations & Route Navigation</p>
+              <p>Locomotive Operations &amp; Route Navigation</p>
               <div class="role-badge">LP</div>
             </div>
             <div class="role-card-arrow">
@@ -132,7 +173,7 @@
       </div>
     </div>
 
-    <!-- LOGIN FORM PANEL (shown after role selection) -->
+    <!-- LOGIN FORM PANEL -->
     <div class="login-right hidden" id="login-form-panel">
       <div class="login-right-content">
         <button class="back-btn" id="back-to-roles" onclick="backToRoles()">
@@ -199,6 +240,15 @@
   <!-- TOP NAVIGATION -->
   <nav class="dashboard-nav" id="dashboard-nav">
     <div class="nav-left">
+      <!-- TrainSyn Badge -->
+      <div class="trainsyn-badge" id="trainsyn-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+          <rect x="2" y="11" width="20" height="8" rx="2"/>
+          <path d="M4 11V7a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v4"/>
+          <circle cx="7" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>
+        </svg>
+        <span class="tsb-train">TRAIN</span><span class="tsb-syn">SYN</span>
+      </div>
       <img src="assets/indian_railways_logo.jpg" alt="IR Logo" class="nav-logo" />
       <div class="nav-brand">
         <span class="nav-title">Indian Railways</span>
@@ -243,7 +293,7 @@
           </button>
           <!-- Station Master only -->
           <button class="hm-tab sm-only hidden" id="tab-my-queries" onclick="switchTab('my-queries')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             My Queries
             <span class="query-badge hidden" id="query-count-badge">0</span>
           </button>
@@ -252,6 +302,12 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
             Repair Jobs
             <span class="query-badge hidden" id="repair-jobs-badge">0</span>
+          </button>
+          <!-- Loco Pilot only -->
+          <button class="hm-tab lp-only hidden" id="tab-my-route" onclick="switchTab('my-route')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            My Route
+            <span class="deviation-badge hidden" id="deviation-badge">!</span>
           </button>
         </div>
       </div>
@@ -274,33 +330,18 @@
       <span class="nsb-title">NETWORK STATUS</span>
     </div>
     <div class="nsb-stats">
-      <div class="nsb-stat operational">
-        <span class="nsb-dot"></span>
-        <span class="nsb-num" id="nsb-operational">–</span>
-        <span class="nsb-label">Operational Tracks</span>
-      </div>
+      <div class="nsb-stat operational"><span class="nsb-dot"></span><span class="nsb-num" id="nsb-operational">–</span><span class="nsb-label">Operational Tracks</span></div>
       <div class="nsb-divider"></div>
-      <div class="nsb-stat blocked">
-        <span class="nsb-dot"></span>
-        <span class="nsb-num" id="nsb-blocked">–</span>
-        <span class="nsb-label">Blocked Tracks</span>
-      </div>
+      <div class="nsb-stat blocked"><span class="nsb-dot"></span><span class="nsb-num" id="nsb-blocked">–</span><span class="nsb-label">Blocked Tracks</span></div>
       <div class="nsb-divider"></div>
       <div class="nsb-stat trains-blocked">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/></svg>
-        <span class="nsb-num" id="nsb-trains-blocked">–</span>
-        <span class="nsb-label">Trains Halted/Delayed</span>
+        <span class="nsb-num" id="nsb-trains-blocked">–</span><span class="nsb-label">Trains Halted/Delayed</span>
       </div>
       <div class="nsb-divider"></div>
-      <div class="nsb-stat total">
-        <span class="nsb-num" id="nsb-total">–</span>
-        <span class="nsb-label">Total Tracks</span>
-      </div>
+      <div class="nsb-stat total"><span class="nsb-num" id="nsb-total">–</span><span class="nsb-label">Total Tracks</span></div>
       <div class="nsb-divider"></div>
-      <div class="nsb-stat stations">
-        <span class="nsb-num" id="nsb-stations">–</span>
-        <span class="nsb-label">Stations</span>
-      </div>
+      <div class="nsb-stat stations"><span class="nsb-num" id="nsb-stations">–</span><span class="nsb-label">Stations</span></div>
     </div>
     <div class="nsb-right">
       <span class="nsb-updated" id="nsb-updated">Updated: –</span>
@@ -336,44 +377,21 @@
           <div class="sidebar-section">
             <h3 class="sidebar-title">Legend</h3>
             <div class="legend">
-              <div class="legend-item">
-                <div class="legend-line operational"></div>
-                <span>Operational Track</span>
-              </div>
-              <div class="legend-item">
-                <div class="legend-line blocked"></div>
-                <span>Blocked Track</span>
-              </div>
-              <div class="legend-item">
-                <div class="legend-dot terminal"></div>
-                <span>Terminal Station</span>
-              </div>
-              <div class="legend-item">
-                <div class="legend-dot junction"></div>
-                <span>Junction</span>
-              </div>
+              <div class="legend-item"><div class="legend-line operational"></div><span>Operational Track</span></div>
+              <div class="legend-item"><div class="legend-line blocked"></div><span>Blocked Track</span></div>
+              <div class="legend-item"><div class="legend-line deviated"></div><span>Deviated Route</span></div>
+              <div class="legend-item"><div class="legend-dot terminal"></div><span>Terminal Station</span></div>
+              <div class="legend-item"><div class="legend-dot junction"></div><span>Junction</span></div>
             </div>
           </div>
 
           <div class="sidebar-section">
             <h3 class="sidebar-title">Network Stats</h3>
             <div class="network-stats" id="network-stats">
-              <div class="nstat-item">
-                <span class="nstat-val" id="ns-total-tracks">90</span>
-                <span class="nstat-label">Total Tracks</span>
-              </div>
-              <div class="nstat-item">
-                <span class="nstat-val operational-text" id="ns-operational">83</span>
-                <span class="nstat-label">Operational</span>
-              </div>
-              <div class="nstat-item">
-                <span class="nstat-val blocked-text" id="ns-blocked">7</span>
-                <span class="nstat-label">Blocked</span>
-              </div>
-              <div class="nstat-item">
-                <span class="nstat-val" id="ns-stations">75</span>
-                <span class="nstat-label">Stations</span>
-              </div>
+              <div class="nstat-item"><span class="nstat-val" id="ns-total-tracks">90</span><span class="nstat-label">Total Tracks</span></div>
+              <div class="nstat-item"><span class="nstat-val operational-text" id="ns-operational">83</span><span class="nstat-label">Operational</span></div>
+              <div class="nstat-item"><span class="nstat-val blocked-text" id="ns-blocked">7</span><span class="nstat-label">Blocked</span></div>
+              <div class="nstat-item"><span class="nstat-val" id="ns-stations">75</span><span class="nstat-label">Stations</span></div>
             </div>
           </div>
         </div>
@@ -386,7 +404,7 @@
           </div>
 
           <canvas id="railway-map" class="railway-canvas"></canvas>
-          
+
           <!-- Station Info Popup -->
           <div class="station-popup hidden" id="station-popup">
             <div class="popup-header">
@@ -416,7 +434,19 @@
                 <span class="track-status-badge" id="track-popup-status">Operational</span>
               </div>
               <div class="track-popup-reason hidden" id="track-popup-reason"></div>
+              <!-- SM-only deviate button (injected by JS) -->
+              <div id="track-popup-deviate-area"></div>
             </div>
+          </div>
+
+          <!-- Deviation Route Overlay Info -->
+          <div class="deviation-overlay-info hidden" id="deviation-overlay-info">
+            <div class="doi-header">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+              ACTIVE DEVIATION ROUTE
+            </div>
+            <div class="doi-body" id="doi-body"></div>
+            <button class="doi-close" onclick="clearDeviationOverlay()">✕ Close</button>
           </div>
         </div>
       </div>
@@ -441,7 +471,7 @@
     <!-- =============== ALERTS TAB =============== -->
     <div class="tab-panel" id="panel-alerts">
       <div class="panel-header">
-        <h2>Active Alerts & Incidents</h2>
+        <h2>Active Alerts &amp; Incidents</h2>
         <div class="panel-actions">
           <select class="filter-select" id="alert-type-filter" onchange="filterAlerts()">
             <option value="all">All Alerts</option>
@@ -497,6 +527,17 @@
         </div>
       </div>
       <div class="queries-list" id="repair-jobs-list"></div>
+    </div>
+
+    <!-- =============== MY ROUTE TAB (Loco Pilot) =============== -->
+    <div class="tab-panel" id="panel-my-route">
+      <div class="panel-header">
+        <h2>My Route &amp; Deviation Status</h2>
+        <div class="panel-actions">
+          <span class="live-indicator"><span class="live-dot"></span> Real-time</span>
+        </div>
+      </div>
+      <div class="my-route-content" id="my-route-content"></div>
     </div>
 
   </div><!-- end dashboard-content -->
@@ -568,6 +609,63 @@
         </button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ======================================================
+     DEVIATION MODAL (Station Master)
+     ====================================================== -->
+<div class="modal-overlay hidden" id="deviation-modal-overlay" onclick="closeDeviationModal(event)">
+  <div class="modal-box deviation-modal-box" id="deviation-modal">
+    <div class="modal-header">
+      <div class="modal-header-icon deviation-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      </div>
+      <div>
+        <h3>Issue Train Deviation</h3>
+        <p>Calculate &amp; broadcast alternative route for affected train</p>
+      </div>
+      <button class="modal-close-btn" onclick="closeDeviationModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="deviation-modal-body">
+      <div class="modal-form-row">
+        <div class="mf-group">
+          <label>Blocked Track</label>
+          <input class="mf-input" id="dev-blocked-track" readonly />
+        </div>
+        <div class="mf-group">
+          <label>Affected Train *</label>
+          <select class="mf-input" id="dev-train-select" onchange="previewDeviation()">
+            <option value="">-- Select Train --</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Route Preview -->
+      <div class="deviation-preview" id="deviation-preview">
+        <div class="dp-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Alternative Route Analysis
+        </div>
+        <div class="dp-body" id="deviation-preview-body">
+          <div class="dp-placeholder">Select a train above to compute the alternative route</div>
+        </div>
+      </div>
+
+      <div class="deviation-reason-group">
+        <label>Message to Loco Pilot</label>
+        <textarea class="mf-input mf-textarea" id="dev-message" rows="2" placeholder="e.g. Track T007 blocked due to flash flood. Proceed via Solapur (SUR) corridor…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="modal-cancel-btn" onclick="closeDeviationModal()">Cancel</button>
+      <button type="button" class="modal-submit-btn deviation-submit-btn" id="dev-submit-btn" onclick="submitDeviation()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/></svg>
+        Issue Deviation Order
+      </button>
+    </div>
   </div>
 </div>
 
