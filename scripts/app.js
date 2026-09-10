@@ -263,6 +263,38 @@ const ROLE_LABELS = {
   loco_pilot: 'Loco Pilot',
 };
 
+function updateNetworkStatusBar() {
+  const total = RAILWAY_DATABASE.tracks.length;
+  const operational = RAILWAY_DATABASE.tracks.filter(t => t.status === 'operational').length;
+  const blocked = total - operational;
+  const stations = RAILWAY_DATABASE.stations.length;
+  const trainsAffected = RAILWAY_DATABASE.trains.filter(t => t.status === 'halted' || t.status === 'delayed').length;
+
+  const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  setEl('nsb-operational', operational);
+  setEl('nsb-blocked', blocked);
+  setEl('nsb-trains-blocked', trainsAffected);
+  setEl('nsb-total', total);
+  setEl('nsb-stations', stations);
+  setEl('ns-total-tracks', total);
+  setEl('ns-operational', operational);
+  setEl('ns-blocked', blocked);
+  setEl('ns-stations', stations);
+
+  const criticalCount = RAILWAY_DATABASE.alerts.filter(a => a.type === 'critical').length;
+  setEl('alert-count-badge', criticalCount);
+
+  const now = new Date();
+  setEl('nsb-updated', 'Updated: ' + now.toLocaleTimeString('en-IN', { hour12: false }) + ' IST');
+}
+
+const initAlertTicker = () => setupTicker();
+const renderAlertsList = () => renderAlerts();
+
+window.updateNetworkStatusBar = updateNetworkStatusBar;
+window.initAlertTicker = initAlertTicker;
+window.renderAlertsList = renderAlertsList;
+
 function showDashboard(user) {
   document.getElementById('login-page').classList.add('hidden');
   document.getElementById('dashboard-page').classList.remove('hidden');
@@ -280,8 +312,7 @@ function showDashboard(user) {
   renderTrains();
   setTimeout(() => initMap(), 100);
 
-  const criticalCount = RAILWAY_DATABASE.alerts.filter(a => a.type === 'critical').length;
-  document.getElementById('alert-count-badge').textContent = criticalCount;
+  updateNetworkStatusBar();
 
   const total = RAILWAY_DATABASE.tracks.length;
   const operational = RAILWAY_DATABASE.tracks.filter(t => t.status === 'operational').length;
@@ -490,9 +521,14 @@ function initVsnStore() {
     t: Math.min(0.85, 18.5 / trk009Dist),
     train_speed: 80.0,
     track_occupancy: 0,
-    track_condition: 'GOOD',
+    track_condition: 'Normal',
     vibration_level: 'NORMAL',
-    vibration_val: 1.8,
+    oscillation: 0.12,
+    vibration_val: 0.12,
+    vibration: 0.12,
+    rail_temp: 38,
+    temp: 38,
+    health: 96,
     signal_status: 'GREEN',
     timestamp: new Date().toISOString(),
     anomaly_score: 8.0,
@@ -508,6 +544,9 @@ function initVsnStore() {
     const hash = (track.id.charCodeAt(0) * 19 + (track.id.charCodeAt(track.id.length - 1) || 0) * 29) % 100;
     const baseKm = Math.round(dist * 0.45 * 10) / 10;
     const vsnNum = String(10 + (hash % 85)).padStart(3, '0');
+    const osc = Math.round((0.12 + (hash % 6) / 100) * 100) / 100;
+    const temp = Math.round(36 + (hash % 5));
+    const health = Math.round(94 + (hash % 5));
 
     vsnList.push({
       vsn_id: `VSN-${vsnNum}`,
@@ -516,9 +555,14 @@ function initVsnStore() {
       t: 0.45,
       train_speed: 80.0,
       track_occupancy: 0,
-      track_condition: 'GOOD',
+      track_condition: 'Normal',
       vibration_level: 'NORMAL',
-      vibration_val: Math.round((1.6 + (hash % 10) / 10) * 10) / 10,
+      oscillation: osc,
+      vibration_val: osc,
+      vibration: osc,
+      rail_temp: temp,
+      temp: temp,
+      health: health,
       signal_status: 'GREEN',
       timestamp: new Date().toISOString(),
       anomaly_score: 6.0 + (hash % 5),
@@ -548,25 +592,43 @@ function saveVsns(vsns) {
   } catch (e) {}
 }
 
+function safeNum(val, fallback = null) {
+  if (val === null || val === undefined || val === '') return fallback;
+  const num = Number(val);
+  return isNaN(num) ? fallback : num;
+}
+
 function getTrackSensors(track) {
   const all = loadVsns();
   const trackVsns = all.filter(v => v.track_id === track.id);
   if (trackVsns.length > 0) return trackVsns;
-  // Fallback default node if none exists
+
+  // Fallback default node if none exists with deterministic properties
+  const dist = track.distance || 30;
+  const hash = (track.id.charCodeAt(0) * 19 + (track.id.charCodeAt(track.id.length - 1) || 0) * 29) % 100;
+  const osc = Math.round((0.12 + (hash % 6) / 100) * 100) / 100;
+  const temp = Math.round(36 + (hash % 5));
+  const health = Math.round(94 + (hash % 5));
+
   return [{
     vsn_id: `VSN-${track.id}`,
     track_id: track.id,
-    km_position: Math.round((track.distance || 30) * 0.45 * 10) / 10,
+    km_position: Math.round(dist * 0.45 * 10) / 10,
     t: 0.45,
     train_speed: 80.0,
     track_occupancy: 0,
-    track_condition: 'GOOD',
+    track_condition: 'Normal',
     vibration_level: 'NORMAL',
-    vibration_val: 1.8,
+    oscillation: osc,
+    vibration_val: osc,
+    vibration: osc,
+    rail_temp: temp,
+    temp: temp,
+    health: health,
     signal_status: 'GREEN',
     timestamp: new Date().toISOString(),
-    anomaly_score: 8.0,
-    blockage_probability: 8.0,
+    anomaly_score: 6.0 + (hash % 4),
+    blockage_probability: 7.0 + (hash % 4),
     status: 'NORMAL',
     isSimulatedFault: false
   }];
@@ -1509,26 +1571,61 @@ function showTrackPopup(track, cx, cy) {
   if (track.reason) { reasonEl.textContent = '⚠ ' + track.reason; reasonEl.classList.remove('hidden'); }
   else { reasonEl.classList.add('hidden'); }
 
-  // Virtual Sensors Telemetry Snapshot
+  // Virtual Sensors Telemetry Snapshot with safe deterministic parsing
   const sensors = getTrackSensors(track);
-  const avgVib = (sensors.reduce((acc, s) => acc + s.vibration, 0) / sensors.length).toFixed(1);
-  const avgTemp = (sensors.reduce((acc, s) => acc + s.temp, 0) / sensors.length).toFixed(1);
-  const healthScore = Math.round(sensors.reduce((acc, s) => acc + s.health, 0) / sensors.length);
+
+  // Deterministic fallbacks based on track hash if values are absent
+  const trkHash = (track.id.charCodeAt(0) * 19 + (track.id.charCodeAt(track.id.length - 1) || 0) * 29) % 100;
+  const defaultOsc = isBlocked ? 0.88 : Math.round((0.12 + (trkHash % 6) / 100) * 100) / 100;
+  const defaultTemp = isBlocked ? 54 : (36 + (trkHash % 5));
+  const defaultHealth = isBlocked ? 24 : Math.round(94 + (trkHash % 5));
+
+  let vibSum = 0, vibCount = 0;
+  let tempSum = 0, tempCount = 0;
+  let healthSum = 0, healthCount = 0;
+
+  if (Array.isArray(sensors) && sensors.length > 0) {
+    sensors.forEach(s => {
+      const v = safeNum(s.oscillation) ?? safeNum(s.vibration_val) ?? safeNum(s.vibration);
+      if (v !== null) { vibSum += v; vibCount++; }
+
+      const t = safeNum(s.rail_temp) ?? safeNum(s.temp);
+      if (t !== null) { tempSum += t; tempCount++; }
+
+      const h = safeNum(s.health) ?? (safeNum(s.anomaly_score) !== null ? Math.max(10, Math.round(100 - s.anomaly_score)) : null);
+      if (h !== null) { healthSum += h; healthCount++; }
+    });
+  }
+
+  const avgVib = vibCount > 0 ? (vibSum / vibCount) : defaultOsc;
+  const avgTemp = tempCount > 0 ? (tempSum / tempCount) : defaultTemp;
+  const healthScore = healthCount > 0 ? Math.round(healthSum / healthCount) : defaultHealth;
+
+  const vibText = (avgVib !== null && !isNaN(avgVib)) ? `${avgVib.toFixed(2)} g` : 'N/A';
+  const tempText = (avgTemp !== null && !isNaN(avgTemp)) ? `${Math.round(avgTemp)}°C` : 'N/A';
+  const healthText = (healthScore !== null && !isNaN(healthScore)) ? `${healthScore}%` : 'N/A';
+  const condText = isBlocked ? 'Critical (High Risk)' : 'Normal';
 
   const sensorsEl = document.getElementById('track-popup-sensors');
   if (sensorsEl) {
     sensorsEl.innerHTML = `
-      <div class="tp-sensor-chip">
-        <span class="tp-sensor-val ${avgVib > 4.0 ? 'danger' : avgVib > 2.5 ? 'warn' : ''}">${avgVib} g</span>
-        <span class="tp-sensor-lbl">Oscillation</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:#f8f9fa;border-radius:6px;border:1px solid #e8eaed;margin-bottom:8px;font-size:11.5px;">
+        <span style="color:#5f6368;font-weight:500;">Condition:</span>
+        <strong style="color:${isBlocked ? '#d93025' : '#1e8e3e'};">${condText}</strong>
       </div>
-      <div class="tp-sensor-chip">
-        <span class="tp-sensor-val ${avgTemp > 50 ? 'danger' : avgTemp > 42 ? 'warn' : ''}">${avgTemp}°C</span>
-        <span class="tp-sensor-lbl">Rail Temp</span>
-      </div>
-      <div class="tp-sensor-chip">
-        <span class="tp-sensor-val ${healthScore < 60 ? 'danger' : healthScore < 80 ? 'warn' : ''}">${healthScore}%</span>
-        <span class="tp-sensor-lbl">VSN Health</span>
+      <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:6px;">
+        <div class="tp-sensor-chip">
+          <span class="tp-sensor-val ${avgVib > 0.4 ? 'danger' : avgVib > 0.25 ? 'warn' : ''}">${vibText}</span>
+          <span class="tp-sensor-lbl">Oscillation</span>
+        </div>
+        <div class="tp-sensor-chip">
+          <span class="tp-sensor-val ${avgTemp > 50 ? 'danger' : avgTemp > 42 ? 'warn' : ''}">${tempText}</span>
+          <span class="tp-sensor-lbl">Rail Temp</span>
+        </div>
+        <div class="tp-sensor-chip">
+          <span class="tp-sensor-val ${healthScore < 60 ? 'danger' : healthScore < 80 ? 'warn' : ''}">${healthText}</span>
+          <span class="tp-sensor-lbl">VSN Health</span>
+        </div>
       </div>
     `;
   }
@@ -1596,6 +1693,11 @@ function handleTrackPopupRepair() {
   if (track) openAddRepairModal(track.id);
   else openAddRepairModal();
 }
+
+window.handleTrackPopupQuery = handleTrackPopupQuery;
+window.handleTrackPopupRepair = handleTrackPopupRepair;
+window.simulateVsnFault = simulateVsnFault;
+window.resetVsnSimulation = resetVsnSimulation;
 
 function showSensorTelemetryPopup(sensor, track, cx, cy) {
   closePopup(); closeTrackPopup();
@@ -1734,9 +1836,14 @@ function simulateVsnFault(vsnId = 'VSN-024') {
   // 1. Inject abnormal critical telemetry
   vsn.train_speed = 0.0;
   vsn.track_occupancy = 1;
-  vsn.track_condition = 'CRITICAL';
+  vsn.track_condition = 'Critical';
   vsn.vibration_level = 'HIGH';
-  vsn.vibration_val = 4.8;
+  vsn.oscillation = 0.88;
+  vsn.vibration_val = 0.88;
+  vsn.vibration = 0.88;
+  vsn.rail_temp = 56;
+  vsn.temp = 56;
+  vsn.health = 22;
   vsn.signal_status = 'RED';
   vsn.isSimulatedFault = true;
   vsn.timestamp = new Date().toISOString();
@@ -1757,7 +1864,7 @@ function simulateVsnFault(vsnId = 'VSN-024') {
 
   if (track) {
     track.status = 'blocked';
-    track.reason = `VSN AI Anomaly: High Blockage Probability (94%) detected by ${vsn.vsn_id} at KM ${vsn.km_position} (${vsn.reasons.slice(0, 2).join(', ')})`;
+    track.reason = `VSN Anomaly: High Blockage Probability (94%) detected by ${vsn.vsn_id} at KM ${vsn.km_position} (${vsn.reasons.slice(0, 2).join(', ')})`;
   }
 
   // 3. Generate Critical Alert in Alerts system
@@ -1786,7 +1893,7 @@ function simulateVsnFault(vsnId = 'VSN-024') {
         trainId: affectedTrain.id,
         alternateRoute: altRoute.stationPath,
         totalDistance: altRoute.totalDistance,
-        issuedByName: `VSN Autonomous AI (${vsn.vsn_id})`
+        issuedByName: `VSN Autonomous Safety System (${vsn.vsn_id})`
       });
     }
   }
@@ -1801,6 +1908,11 @@ function simulateVsnFault(vsnId = 'VSN-024') {
   const popup = document.getElementById('sensor-telemetry-popup');
   if (popup && !popup.classList.contains('hidden') && APP.mapState.selectedVsnId === vsn.vsn_id) {
     showSensorTelemetryPopup(vsn, track, popup.offsetLeft, popup.offsetTop);
+  }
+
+  // Sync with block planning dashboard if active
+  if (typeof syncVsnWithBlockPlanning === 'function') {
+    syncVsnWithBlockPlanning();
   }
 
   showToast(`🔴 VSN Blockage Triggered on ${track?.id || vsn.track_id} (${vsn.vsn_id}). Track marked BLOCKED. Alternative route displayed in BLUE.`, 'error');
@@ -1818,14 +1930,25 @@ function simulateVsnFault(vsnId = 'VSN-024') {
 function resetVsnSimulation() {
   const vsns = loadVsns();
   vsns.forEach(v => {
+    const hash = (v.vsn_id.charCodeAt(0) * 19 + (v.vsn_id.charCodeAt(v.vsn_id.length - 1) || 0) * 29) % 100;
+    const isTarget = v.vsn_id === 'VSN-024';
+    const osc = isTarget ? 0.12 : Math.round((0.12 + (hash % 6) / 100) * 100) / 100;
+    const temp = isTarget ? 38 : Math.round(36 + (hash % 5));
+    const health = isTarget ? 96 : Math.round(94 + (hash % 5));
+
     v.train_speed = 80.0;
     v.track_occupancy = 0;
-    v.track_condition = 'GOOD';
+    v.track_condition = 'Normal';
     v.vibration_level = 'NORMAL';
-    v.vibration_val = 1.8;
+    v.oscillation = osc;
+    v.vibration_val = osc;
+    v.vibration = osc;
+    v.rail_temp = temp;
+    v.temp = temp;
+    v.health = health;
     v.signal_status = 'GREEN';
-    v.anomaly_score = 8.0;
-    v.blockage_probability = 8.0;
+    v.anomaly_score = isTarget ? 8.0 : 6.0 + (hash % 5);
+    v.blockage_probability = isTarget ? 8.0 : 7.0 + (hash % 5);
     v.status = 'NORMAL';
     v.isSimulatedFault = false;
     v.timestamp = new Date().toISOString();
@@ -1834,7 +1957,7 @@ function resetVsnSimulation() {
 
   // Restore tracks blocked by VSN faults
   RAILWAY_DATABASE.tracks.forEach(t => {
-    if (t.reason && t.reason.includes('VSN AI Anomaly')) {
+    if (t.reason && (t.reason.includes('VSN AI Anomaly') || t.reason.includes('VSN Anomaly'))) {
       t.status = 'operational';
       t.reason = null;
     }
@@ -1853,6 +1976,11 @@ function resetVsnSimulation() {
   renderTracksGrid();
   closeSensorPopup();
 
+  // Sync with block planning dashboard if active
+  if (typeof syncVsnWithBlockPlanning === 'function') {
+    syncVsnWithBlockPlanning();
+  }
+
   showToast(`🔄 VSN Simulation Reset: All virtual sensors returned to normal. Tracks restored.`, 'info');
 
   // Notify backend if reachable
@@ -1868,9 +1996,14 @@ function restoreSingleVsn(vsnId) {
 
   vsn.train_speed = 80.0;
   vsn.track_occupancy = 0;
-  vsn.track_condition = 'GOOD';
+  vsn.track_condition = 'Normal';
   vsn.vibration_level = 'NORMAL';
-  vsn.vibration_val = 1.8;
+  vsn.oscillation = 0.12;
+  vsn.vibration_val = 0.12;
+  vsn.vibration = 0.12;
+  vsn.rail_temp = 38;
+  vsn.temp = 38;
+  vsn.health = 96;
   vsn.signal_status = 'GREEN';
   vsn.anomaly_score = 8.0;
   vsn.blockage_probability = 8.0;
@@ -1887,6 +2020,10 @@ function restoreSingleVsn(vsnId) {
   }
 
   RAILWAY_DATABASE.alerts = RAILWAY_DATABASE.alerts.filter(a => a.id !== ('ALT-' + vsnId));
+
+  if (typeof syncVsnWithBlockPlanning === 'function') {
+    syncVsnWithBlockPlanning();
+  }
 
   updateNetworkStatusBar();
   initAlertTicker();

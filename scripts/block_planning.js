@@ -638,7 +638,7 @@ function syncVsnWithBlockPlanning() {
 
     if (isVsnFault) {
       if (t001) {
-        t001.score = 96;
+        t001.score = 98;
         t001.priority = 'critical';
         t001.riskLevel = 'CRITICAL';
         t001.vsnSource = 'Detected by VSN-024 (TRK009 · KM 18.5)';
@@ -654,13 +654,19 @@ function syncVsnWithBlockPlanning() {
       if (vsnSub) vsnSub.textContent = 'TRK009 @ KM 18.5 (Score: 91%)';
     } else {
       if (t001 && !BP_DATA.optimizerRan) {
-        t001.score = 96; // keep high as baseline
+        t001.score = 72;
+        t001.priority = 'high';
+        t001.riskLevel = 'MODERATE';
+        t001.vsnSource = 'Cyclic TMS Ultrasonic Scan';
+        t001.problem = 'Routine weld joint ultrasonic monitoring';
+        t001.recommendedAction = 'Periodic flaw detector sweep';
       }
       if (pillText) pillText.textContent = '24 Nodes (Normal)';
       if (pill) {
         pill.classList.remove('critical');
         pill.classList.add('normal');
       }
+      if (vsnSub) vsnSub.textContent = 'Track condition & telemetry';
     }
   } catch (err) {
     console.warn('VSN sync non-critical notice:', err);
@@ -690,13 +696,28 @@ function resetDemoVsnAnomaly() {
     window.resetVsnSimulation();
   }
   BP_DATA.optimizerRan = false;
+
+  const t001 = BP_DATA.tasks.find(t => t.id === 'T001');
+  if (t001) {
+    t001.score = 72;
+    t001.priority = 'high';
+    t001.riskLevel = 'MODERATE';
+    t001.vsnSource = 'Cyclic TMS Ultrasonic Scan';
+    t001.problem = 'Routine weld joint ultrasonic monitoring';
+    t001.recommendedAction = 'Periodic flaw detector sweep';
+    t001.assignedBlock = null;
+    t001.status = 'pending';
+  }
+
   syncVsnWithBlockPlanning();
   updateBPStats();
   renderBPQueue();
   renderDeptCards();
   filterBPRecords();
   drawGantt();
-  showBPToast('↺ Baseline sensor telemetry restored.');
+
+  // Exact confirmation required by user
+  showBPToast('Demo reset — network restored to normal state.');
 }
 
 function openVsnModalFromBP() {
@@ -713,13 +734,13 @@ function updateBPStats() {
 
   const activeBlocks   = blocks.filter(b => b.status === 'active').length || 2;
   const pendingTasks   = tasks.filter(t => t.status === 'pending').length || 14;
-  const combinedTasks  = BP_DATA.optimizerRan ? 8 : (tasks.filter(t => t.assignedBlock === 'BLK-001' || (t.assignedBlock && t.assignedBlock.startsWith('BLK-AI'))).length || 5);
+  const combinedBlocks = BP_DATA.optimizerRan ? 2 : 1;
   const criticalTasks  = tasks.filter(t => t.priority === 'critical').length || 5;
   const availability   = BP_DATA.optimizerRan ? 89 : 84;
 
   animCount('bpst-active',       activeBlocks);
   animCount('bpst-pending',      pendingTasks);
-  animCount('bpst-combined',     combinedTasks);
+  animCount('bpst-combined',     combinedBlocks);
   animCount('bpst-critical',     criticalTasks);
   animCountStr('bpst-availability', `${availability}%`);
 }
@@ -729,10 +750,11 @@ function animCount(id, target) {
   if (!el) return;
   let cur = 0;
   const step = Math.ceil(target / 15) || 1;
-  const iv = setInterval(() => {
+  let iv;
+  iv = setInterval(() => {
     cur = Math.min(cur + step, target);
     el.textContent = cur;
-    if (cur >= target) clearInterval(iv);
+    if (cur >= target && iv) clearInterval(iv);
   }, 35);
 }
 
@@ -754,7 +776,7 @@ function filterBPByKPI(type) {
     showBPToast('Showing all pending maintenance tasks.');
   } else if (type === 'combined') {
     document.querySelector('.bp-workflow-banner')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    showBPToast('Highlighting AI Corridor Combination recommendation (NDLS–CNB).');
+    showBPToast('Highlighting Recommended Combined Block (NDLS–CNB).');
   } else if (type === 'critical') {
     const sel = document.getElementById('bp-priority-filter');
     if (sel) sel.value = 'critical';
@@ -763,6 +785,203 @@ function filterBPByKPI(type) {
     showBPToast('Filtered Priority Queue to Critical maintenance items.');
   }
 }
+
+// ─────────────────────────────────────────────────────────────
+// DECISION SUPPORT MODALS (Why this schedule, Priority, Tasks, Reasoning)
+// ─────────────────────────────────────────────────────────────
+function openWhyScheduleModal() {
+  openScheduleReasoningModal();
+}
+
+function openScheduleReasoningModal() {
+  const overlay = document.getElementById('bp-explanation-modal-overlay');
+  const titleEl = document.getElementById('bp-exp-modal-title');
+  const subEl   = document.getElementById('bp-exp-modal-sub');
+  const bodyEl  = document.getElementById('bp-exp-modal-body');
+  if (!overlay || !bodyEl) return;
+
+  if (titleEl) titleEl.textContent = 'Why This Schedule Was Recommended';
+  if (subEl) subEl.textContent = 'Corridor Optimization & Traffic Synchronization';
+
+  bodyEl.innerHTML = `
+    <div style="background:#f8fafc;padding:14px;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:700;color:var(--blue-900);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">
+        WHY THIS BLOCK WAS RECOMMENDED
+      </div>
+      <ul style="margin:0;padding-left:18px;font-size:12.5px;color:#334155;line-height:1.6;">
+        <li><strong>Engineering, TRD and S&amp;T tasks overlap</strong> on the same corridor (NDLS → CNB).</li>
+        <li><strong>VSN-024 reports a high-risk anomaly</strong> requiring prioritized track intervention.</li>
+        <li><strong>Combining the work avoids separate track access windows</strong> and multiple line possessions.</li>
+      </ul>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+      <div style="background:#ffffff;padding:12px;border-radius:6px;border:1px solid #e2e8f0;">
+        <div style="font-size:11px;color:#64748b;font-weight:600;">RECOMMENDATION:</div>
+        <div style="font-size:14px;font-weight:700;color:var(--blue-900);margin-top:2px;">1 combined block</div>
+        <div style="font-size:11px;color:#0f172a;margin-top:2px;">02:00 – 08:00 (Night Window)</div>
+      </div>
+      <div style="background:#ffffff;padding:12px;border-radius:6px;border:1px solid #e2e8f0;">
+        <div style="font-size:11px;color:#64748b;font-weight:600;">ESTIMATED SAVING:</div>
+        <div style="font-size:14px;font-weight:700;color:#16a34a;margin-top:2px;">6 hours</div>
+        <div style="font-size:11px;color:#64748b;margin-top:2px;">50% track possession reduction</div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f1f5f9;border-radius:6px;font-size:11px;border:1px solid #e2e8f0;">
+      <span style="color:#475569;">Integrated Department Coordination System</span>
+      <span style="font-weight:600;color:#64748b;font-style:italic;">Prototype estimate</span>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button class="bp-table-btn" onclick="openPriorityExplanationModal()" style="flex:1;padding:8px;font-size:11.5px;font-weight:600;background:#e8f1fb;color:var(--blue-800);border:1px solid var(--blue-200);border-radius:4px;cursor:pointer;">
+        📊 Priority Scoring
+      </button>
+      <button class="bp-table-btn" onclick="openCorridorTasksModal()" style="flex:1;padding:8px;font-size:11.5px;font-weight:600;background:#f1f5f9;color:var(--gray-800);border:1px solid var(--gray-300);border-radius:4px;cursor:pointer;">
+        🛠️ Consolidated Tasks
+      </button>
+    </div>
+  `;
+
+  overlay.classList.remove('hidden');
+}
+
+function openPriorityExplanationModal() {
+  const overlay = document.getElementById('bp-explanation-modal-overlay');
+  const titleEl = document.getElementById('bp-exp-modal-title');
+  const subEl   = document.getElementById('bp-exp-modal-sub');
+  const bodyEl  = document.getElementById('bp-exp-modal-body');
+  if (!overlay || !bodyEl) return;
+
+  if (titleEl) titleEl.textContent = 'Maintenance Priority Scoring Formula';
+  if (subEl) subEl.textContent = 'Multi-Factor Railway Risk Evaluation';
+
+  bodyEl.innerHTML = `
+    <div style="font-size:12px;color:#475569;margin-bottom:12px;">
+      Maintenance tasks are ranked deterministically by combining physical track telemetry with operational impact metrics:
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f8fafc;border-radius:6px;border-left:4px solid #dc2626;border-top:1px solid #e2e8f0;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;">
+        <div>
+          <strong style="font-size:12px;color:#0f172a;">Track Geometry &amp; Structural Defect</strong>
+          <div style="font-size:11px;color:#64748b;">USFD micro-fissures, rail fracture risk, weld integrity</div>
+        </div>
+        <span style="font-weight:700;font-size:12px;color:#dc2626;">40% Weight</span>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f8fafc;border-radius:6px;border-left:4px solid #d97706;border-top:1px solid #e2e8f0;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;">
+        <div>
+          <strong style="font-size:12px;color:#0f172a;">Traffic Density &amp; Corridor Impact</strong>
+          <div style="font-size:11px;color:#64748b;">Trunk route GMT, express passenger buffer risk</div>
+        </div>
+        <span style="font-weight:700;font-size:12px;color:#d97706;">25% Weight</span>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f8fafc;border-radius:6px;border-left:4px solid #2563eb;border-top:1px solid #e2e8f0;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;">
+        <div>
+          <strong style="font-size:12px;color:#0f172a;">Overdue Maintenance Interval</strong>
+          <div style="font-size:11px;color:#64748b;">Days elapsed beyond cyclic overhaul mandate</div>
+        </div>
+        <span style="font-weight:700;font-size:12px;color:#2563eb;">20% Weight</span>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f8fafc;border-radius:6px;border-left:4px solid #059669;border-top:1px solid #e2e8f0;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;">
+        <div>
+          <strong style="font-size:12px;color:#0f172a;">Virtual Sensor Telemetry (VSN)</strong>
+          <div style="font-size:11px;color:#64748b;">Real-time axle oscillation and rail temperature anomalies</div>
+        </div>
+        <span style="font-weight:700;font-size:12px;color:#059669;">15% Weight</span>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button class="bp-table-btn" onclick="openScheduleReasoningModal()" style="flex:1;padding:8px;font-size:11.5px;font-weight:600;background:#f1f5f9;color:var(--gray-800);border:1px solid var(--gray-300);border-radius:4px;cursor:pointer;">
+        ← Back to Schedule Reasoning
+      </button>
+      <button class="bp-table-btn" onclick="closeExplanationModal()" style="flex:1;padding:8px;font-size:11.5px;font-weight:600;background:var(--blue-700);color:#ffffff;border:none;border-radius:4px;cursor:pointer;">
+        Done
+      </button>
+    </div>
+  `;
+
+  overlay.classList.remove('hidden');
+}
+
+function openCorridorTasksModal() {
+  const overlay = document.getElementById('bp-explanation-modal-overlay');
+  const titleEl = document.getElementById('bp-exp-modal-title');
+  const subEl   = document.getElementById('bp-exp-modal-sub');
+  const bodyEl  = document.getElementById('bp-exp-modal-body');
+  if (!overlay || !bodyEl) return;
+
+  if (titleEl) titleEl.textContent = 'Consolidated Corridor Tasks';
+  if (subEl) subEl.textContent = 'Integrated Work Items on NDLS → CNB Corridor';
+
+  bodyEl.innerHTML = `
+    <div style="font-size:12px;color:#475569;margin-bottom:12px;">
+      The system coordinates separate department requirements into a single possession window:
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+      <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #e2e8f0;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-weight:700;color:#1e40af;font-size:12px;">T001 · Engineering (TMS)</span>
+          <span style="font-size:11px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:4px;font-weight:600;">CRITICAL</span>
+        </div>
+        <div style="font-size:12px;font-weight:600;color:#0f172a;margin-top:3px;">Rail fracture repair / ultrasonic weld inspection</div>
+        <div style="font-size:11px;color:#64748b;margin-top:2px;">Location: TRK009 @ KM 18.5 · Duration: 4h</div>
+      </div>
+
+      <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #e2e8f0;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-weight:700;color:#0284c7;font-size:12px;">T007 · TRD (TDMS)</span>
+          <span style="font-size:11px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:4px;font-weight:600;">CRITICAL</span>
+        </div>
+        <div style="font-size:12px;font-weight:600;color:#0f172a;margin-top:3px;">OHE wire replacement &amp; catenary dropper adjustment</div>
+        <div style="font-size:11px;color:#64748b;margin-top:2px;">Location: TRK009 @ KM 67.0 · Duration: 5h</div>
+      </div>
+
+      <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #e2e8f0;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-weight:700;color:#0891b2;font-size:12px;">T012 · S&amp;T (SMMS)</span>
+          <span style="font-size:11px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:4px;font-weight:600;">HIGH</span>
+        </div>
+        <div style="font-size:12px;font-weight:600;color:#0f172a;margin-top:3px;">Track circuit tuning &amp; axle counter loop calibration</div>
+        <div style="font-size:11px;color:#64748b;margin-top:2px;">Location: TRK009 @ KM 32.4 · Duration: 3h</div>
+      </div>
+    </div>
+
+    <div style="background:#ecfdf5;border:1px solid #a7f3d0;padding:8px 12px;border-radius:6px;font-size:11.5px;color:#065f46;margin-bottom:14px;">
+      ✓ Executing all 3 tasks concurrently in one 6-hour shadow window eliminates 2 separate corridor shutdowns.
+    </div>
+
+    <div style="display:flex;gap:8px;">
+      <button class="bp-table-btn" onclick="openScheduleReasoningModal()" style="flex:1;padding:8px;font-size:11.5px;font-weight:600;background:#f1f5f9;color:var(--gray-800);border:1px solid var(--gray-300);border-radius:4px;cursor:pointer;">
+        ← Back to Schedule Reasoning
+      </button>
+      <button class="bp-table-btn" onclick="closeExplanationModal()" style="flex:1;padding:8px;font-size:11.5px;font-weight:600;background:var(--blue-700);color:#ffffff;border:none;border-radius:4px;cursor:pointer;">
+        Done
+      </button>
+    </div>
+  `;
+
+  overlay.classList.remove('hidden');
+}
+
+function closeExplanationModal(e) {
+  if (e && e.target !== document.getElementById('bp-explanation-modal-overlay')) return;
+  const overlay = document.getElementById('bp-explanation-modal-overlay');
+  if (overlay) overlay.classList.add('hidden');
+}
+
+window.openWhyScheduleModal = openWhyScheduleModal;
+window.openScheduleReasoningModal = openScheduleReasoningModal;
+window.openPriorityExplanationModal = openPriorityExplanationModal;
+window.openCorridorTasksModal = openCorridorTasksModal;
+window.closeExplanationModal = closeExplanationModal;
+window.triggerDemoVsnAnomaly = triggerDemoVsnAnomaly;
+window.resetDemoVsnAnomaly = resetDemoVsnAnomaly;
 
 // Infrastructure Availability Modal Breakdown (Consistent with 34 central tracks)
 function openInfrastructureAvailabilityModal() {
@@ -1198,7 +1417,7 @@ function renderBPQueue() {
       : `<span class="bp-unassigned-tag">Unscheduled</span>`;
 
     return `
-    <div class="bp-queue-item ${tier}-tier-item clickable-task" id="bpqi-${t.id}" onclick="openBpAssessmentModal('${t.id}')" title="Click to view AI Maintenance Assessment">
+    <div class="bp-queue-item ${tier}-tier-item clickable-task" id="bpqi-${t.id}" onclick="openBpAssessmentModal('${t.id}')" title="Click to view Priority Assessment">
       <div class="bpqi-rank">#${idx + 1}</div>
       <div class="bpqi-score-wrap">
         <div class="bpqi-score ${tier}-tier">${t.score}</div>
@@ -1773,14 +1992,15 @@ function runAIOptimizer() {
   let step = 0;
   let pct  = 0;
 
-  const iv = setInterval(() => {
+  let iv;
+  iv = setInterval(() => {
     step++;
     pct = Math.round((step / OPTIMIZER_STEPS.length) * 100);
     if (stepsEl) stepsEl.textContent = OPTIMIZER_STEPS[Math.min(step - 1, OPTIMIZER_STEPS.length - 1)];
     if (fillEl)  fillEl.style.width = pct + '%';
 
     if (step >= OPTIMIZER_STEPS.length) {
-      clearInterval(iv);
+      if (iv) clearInterval(iv);
       setTimeout(() => {
         overlay.classList.add('hidden');
         btn.disabled = false;
