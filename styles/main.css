@@ -2603,5 +2603,380 @@ html, body {
   box-shadow: none;
 }
 
+/* ============================================================
+   REALISTIC RAILWAY MAINTENANCE & VSN INTEGRATION (BLOCK PLANNING)
+   ============================================================ */
 
+/* VSN Status Pill in Header */
+.bp-vsn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.bp-vsn-pill:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+}
+.bp-vsn-pill.critical {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+.bp-vsn-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #16a34a;
+  display: inline-block;
+}
+.bp-vsn-pill.critical .bp-vsn-indicator-dot {
+  background: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+}
+.bp-vsn-alert-text {
+  font-weight: 700;
+  color: #dc2626;
+  margin-left: 2px;
+}
+.bp-vsn-pill.normal .bp-vsn-alert-text {
+  color: #15803d;
+}
 
+/* KPI Trend Details */
+.bp-stat-card.clickable {
+  cursor: pointer;
+}
+.bp-stat-card.clickable:hover {
+  border-color: var(--blue-400);
+  box-shadow: 0 4px 12px rgba(21, 101, 192, 0.12);
+  transform: translateY(-2px);
+}
+.bp-stat-trend {
+  font-size: 10px;
+  color: var(--gray-500);
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.bp-trend-badge {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  display: inline-block;
+}
+.bp-trend-badge.up {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+.bp-trend-badge.warn {
+  background: #fffbeb;
+  color: #b45309;
+}
+.bp-trend-badge.success {
+  background: #f0fdf4;
+  color: #15803d;
+}
+.bp-trend-badge.info {
+  background: #f5f3ff;
+  color: #6d28d9;
+}
+.bp-trend-badge.danger {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+/* Workflow & Block Utilization Banner */
+.bp-workflow-banner {
+  background: #ffffff;
+  border: 1px solid var(--blue-100);
+  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+}
+.bp-wf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.bp-wfh-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.bp-wfh-icon {
+  font-size: 20px;
+}
+.bp-wfh-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--blue-900);
+}
+.bp-wfh-sub {
+  font-size: 11px;
+  color: var(--gray-500);
+}
+.bp-wfh-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.bp-demo-quick-btn {
+  background: #fff1f0;
+  color: #d93025;
+  border: 1px solid #ffa39e;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.bp-demo-quick-btn:hover {
+  background: #ffccc7;
+}
+.bp-demo-reset-btn {
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.bp-demo-reset-btn:hover {
+  background: #f1f5f9;
+}
+
+/* Pipeline Steps Horizontal Flow */
+.bp-wf-pipeline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.bp-wf-step {
+  flex: 1;
+  min-width: 140px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  text-align: left;
+}
+.bp-wf-step.active-vsn {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+.bp-wfs-badge {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--gray-500);
+  letter-spacing: 0.3px;
+  margin-bottom: 2px;
+}
+.bp-wf-step.active-vsn .bp-wfs-badge {
+  color: var(--blue-700);
+}
+.bp-wfs-title {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--blue-900);
+}
+.bp-wfs-sub {
+  font-size: 10px;
+  color: var(--gray-500);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bp-wf-arrow {
+  color: #94a3b8;
+  font-weight: bold;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+/* Block Utilization Compare Row */
+.bp-util-row {
+  margin-top: 10px;
+}
+.bp-util-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.bp-util-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+.bp-util-chip {
+  background: #e8f1fb;
+  color: var(--blue-800);
+  border: 1px solid #bfdbfe;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+}
+.bp-util-compare-grid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.bp-ucg-item {
+  flex: 1;
+  min-width: 160px;
+}
+.bp-ucg-lbl {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  display: block;
+}
+.bp-ucg-val {
+  font-size: 14px;
+  font-weight: 800;
+  margin: 2px 0;
+  display: block;
+}
+.bp-ucg-val.cross {
+  color: #64748b;
+  text-decoration: line-through;
+}
+.bp-ucg-val.success {
+  color: #15803d;
+}
+.bp-ucg-sub {
+  font-size: 10.5px;
+  color: var(--gray-500);
+}
+.bp-ucg-sep {
+  font-size: 16px;
+  color: #94a3b8;
+}
+.bp-ucg-badge {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 8px 14px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.bp-saving-hero {
+  font-size: 14px;
+  font-weight: 900;
+  color: #166534;
+}
+.bp-saving-note {
+  font-size: 10px;
+  color: #15803d;
+  margin-top: 1px;
+}
+
+/* Why This Schedule? Explainability Card */
+.bp-why-schedule-card {
+  margin-top: 14px;
+}
+.bp-why-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.bp-why-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 11.5px;
+  color: var(--gray-700);
+  line-height: 1.45;
+}
+.bp-why-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #e8f1fb;
+  color: var(--blue-700);
+  font-size: 10px;
+  font-weight: 800;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Interactive Queue Items */
+.clickable-task {
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.clickable-task:hover {
+  background: #f8fafc;
+  border-color: var(--blue-300);
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Table action buttons in Block Plan */
+.bp-table-btn {
+  transition: all 0.15s ease;
+}
+.bp-table-btn:hover {
+  background: #e2e8f0;
+  transform: translateY(-1px);
+}
+.bp-table-btn.accept:hover {
+  background: #047857 !important;
+}
+
+@media (max-width: 1024px) {
+  .bp-wf-pipeline {
+    flex-wrap: wrap;
+  }
+  .bp-wf-arrow {
+    display: none;
+  }
+  .bp-util-compare-grid {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .bp-ucg-badge {
+    width: 100%;
+    text-align: left;
+  }
+}
