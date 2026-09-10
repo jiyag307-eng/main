@@ -579,47 +579,42 @@ function drawMap() {
   ctx.restore();
 }
 
-// ─── Terrain ───────────────────────────────────────────────
+// ─── Terrain (Realistic Google Maps Light Style) ──────────────
 function drawTerrain() {
-  const grad = ctx.createLinearGradient(100, 50, 700, 600);
-  grad.addColorStop(0,   '#0b1a2e');
-  grad.addColorStop(0.3, '#0c2238');
-  grad.addColorStop(0.6, '#0d1f30');
-  grad.addColorStop(1,   '#081626');
+  // Google Maps standard land color (#f4f3f0 / #ebe7de)
+  ctx.fillStyle = '#ebe8e1';
+  ctx.fillRect(-500, -400, 2000, 1600);
 
-  ctx.fillStyle = grad;
-  ctx.fillRect(-300, -200, 1500, 1200);
-
-  // Delhi Urban Center glow (central hub)
+  // Delhi Urban Built-up Area (Warm subtle urban grey/beige #e0ded7)
   ctx.save();
-  const urbanGrad = ctx.createRadialGradient(380, 210, 10, 380, 210, 160);
-  urbanGrad.addColorStop(0, 'rgba(59,130,246,0.12)');
-  urbanGrad.addColorStop(0.5, 'rgba(37,99,235,0.05)');
+  const urbanGrad = ctx.createRadialGradient(380, 210, 10, 380, 210, 220);
+  urbanGrad.addColorStop(0, 'rgba(216, 212, 204, 0.7)');
+  urbanGrad.addColorStop(0.7, 'rgba(230, 227, 219, 0.4)');
   urbanGrad.addColorStop(1, 'transparent');
   ctx.fillStyle = urbanGrad;
   ctx.beginPath();
-  ctx.arc(380, 210, 160, 0, Math.PI * 2);
+  ctx.arc(380, 210, 220, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 
-  // Grid lines (subtle blueprint / CAD styling)
+  // Subtle clean road grid lines (Google Maps arterial network styling)
   ctx.save();
-  ctx.strokeStyle = 'rgba(255,255,255,0.035)';
-  ctx.lineWidth = 0.5;
-  for (let x = -200; x < 1200; x += 60) {
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1.2;
+  for (let x = -200; x < 1200; x += 90) {
     ctx.beginPath(); ctx.moveTo(x, -200); ctx.lineTo(x, 900); ctx.stroke();
   }
-  for (let y = -200; y < 900; y += 60) {
+  for (let y = -200; y < 900; y += 90) {
     ctx.beginPath(); ctx.moveTo(-200, y); ctx.lineTo(1200, y); ctx.stroke();
   }
   ctx.restore();
 }
 
 function drawWaterBodies() {
-  // Yamuna River flowing through Delhi from North to Southeast
+  // Yamuna River flowing through Delhi (Google Maps signature blue #aadaff / #9ec9eb)
   ctx.save();
-  ctx.strokeStyle = 'rgba(56, 189, 248, 0.22)';
-  ctx.lineWidth = 14;
+  ctx.strokeStyle = '#a4d1e8';
+  ctx.lineWidth = 16;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.beginPath();
@@ -630,14 +625,14 @@ function drawWaterBodies() {
   ctx.quadraticCurveTo(440, 480, 460, 620);
   ctx.stroke();
 
-  // Inner river stream (brighter)
-  ctx.strokeStyle = 'rgba(125, 211, 252, 0.35)';
-  ctx.lineWidth = 5;
+  // Inner river highlight
+  ctx.strokeStyle = '#bfe2f3';
+  ctx.lineWidth = 6;
   ctx.stroke();
 
   // River label
-  ctx.font = 'italic 10px Inter';
-  ctx.fillStyle = 'rgba(125, 211, 252, 0.5)';
+  ctx.font = 'italic 11px Inter, sans-serif';
+  ctx.fillStyle = '#4a7d97';
   ctx.fillText('Yamuna River', 440, 360);
   ctx.restore();
 }
@@ -645,19 +640,18 @@ function drawWaterBodies() {
 function drawIndiaOutline() {
   // Regional Delhi Division Railway Boundary
   ctx.save();
-  ctx.strokeStyle = 'rgba(96,165,250,0.15)';
-  ctx.lineWidth = 1.5;
-  ctx.setLineDash([6, 6]);
+  ctx.strokeStyle = 'rgba(71, 85, 105, 0.25)';
+  ctx.lineWidth = 1.2;
+  ctx.setLineDash([5, 5]);
   ctx.beginPath();
-  ctx.roundRect(40, 30, 780, 580, 16);
+  ctx.roundRect(40, 30, 780, 580, 12);
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // Division Tag
-  ctx.font = '700 11px Rajdhani, sans-serif';
-  ctx.fillStyle = 'rgba(147,197,253,0.4)';
-  ctx.letterSpacing = '2px';
-  ctx.fillText('NORTHERN RAILWAY • DELHI DIVISION NETWORK (DATABASE.XLSX)', 60, 52);
+  // Division Tag (clean official typography)
+  ctx.font = '600 11px Inter, sans-serif';
+  ctx.fillStyle = '#64748b';
+  ctx.fillText('Northern Railway • Delhi Division Rail Corridor', 60, 50);
   ctx.restore();
 }
 
@@ -715,23 +709,23 @@ function drawRailTrack(from, to, track, isHovered) {
     ctx.shadowBlur = 18;
   }
 
-  // Determine color (Google Maps Traffic Congestion scheme)
+  // Determine color (Google Maps Traffic Congestion scheme: Red = Blocked, Green = Operational)
   let railColor, ballastColor;
   if (isBlocked || hasSevereRepair) {
-    railColor = isHovered ? '#dc2626' : '#ef4444';
-    ballastColor = 'rgba(239,68,68,0.22)';
+    railColor = isHovered ? '#b91c1c' : '#dc2626'; // Crisp, solid red for blocked
+    ballastColor = 'rgba(220, 38, 38, 0.2)';
   } else if (isDeviated) {
-    railColor = '#f97316';
-    ballastColor = 'rgba(249,115,22,0.2)';
+    railColor = '#ea580c'; // Crisp traffic orange for diverted
+    ballastColor = 'rgba(234, 88, 12, 0.18)';
   } else if (hasCautionRepair) {
-    railColor = isHovered ? '#d97706' : '#f59e0b';
-    ballastColor = 'rgba(245,158,11,0.22)';
+    railColor = isHovered ? '#b45309' : '#d97706'; // Traffic amber
+    ballastColor = 'rgba(217, 119, 6, 0.18)';
   } else if (isCompleted) {
-    railColor = isHovered ? '#1d4ed8' : '#3b82f6';
-    ballastColor = 'rgba(59,130,246,0.15)';
+    railColor = isHovered ? '#2563eb' : '#3b82f6';
+    ballastColor = 'rgba(37, 99, 235, 0.14)';
   } else {
-    railColor = isHovered ? '#34d399' : (APP.mapState.scale > 1.5 ? '#6ee7b7' : '#10b981');
-    ballastColor = 'rgba(16,185,129,0.14)';
+    railColor = isHovered ? '#15803d' : '#16a34a'; // Crisp, solid Google Maps traffic green
+    ballastColor = 'rgba(22, 163, 74, 0.14)';
   }
 
   // Get line angle for offset
@@ -740,11 +734,11 @@ function drawRailTrack(from, to, track, isHovered) {
   const nx = -dy / len, ny = dx / len;  // normal
   const railGap = APP.mapState.scale > 1.4 ? 2.5 : 1.8;
 
-  // Ballast (wide background)
+  // Ballast (clean light road/track bed)
   ctx.beginPath();
   tracePath(ctx, x1, y1, x2, y2, cpx, cpy, isBezier);
   ctx.strokeStyle = ballastColor;
-  ctx.lineWidth = isDeviated ? 10 : 8;
+  ctx.lineWidth = isDeviated ? 9 : 7;
   ctx.setLineDash([]);
   ctx.lineCap = 'round';
   ctx.stroke();
@@ -761,7 +755,7 @@ function drawRailTrack(from, to, track, isHovered) {
   else if (hasCautionRepair) ctx.setLineDash([16, 4]);
   else ctx.setLineDash([]);
   ctx.strokeStyle = railColor;
-  ctx.lineWidth = isHovered ? 2.5 : 2;
+  ctx.lineWidth = isHovered ? 2.8 : 2.2;
   ctx.lineCap = 'round';
   ctx.stroke();
 
@@ -780,7 +774,7 @@ function drawRailTrack(from, to, track, isHovered) {
   // Completed tick
   if (isCompleted) {
     const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
-    ctx.fillStyle = '#2563eb'; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(37,99,235,0.6)';
+    ctx.fillStyle = '#2563eb'; ctx.shadowBlur = 4; ctx.shadowColor = 'rgba(37,99,235,0.3)';
     ctx.beginPath(); ctx.arc(mx, my, 5, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = 'white'; ctx.font = 'bold 7px Inter';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.shadowBlur = 0;
@@ -799,21 +793,21 @@ function drawRailTrack(from, to, track, isHovered) {
 
       ctx.save();
       ctx.beginPath();
-      ctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2);
-      ctx.fillStyle = '#0f172a';
+      ctx.arc(pt.x, pt.y, 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
       ctx.fill();
-      ctx.strokeStyle = s.health < 65 ? '#ef4444' : '#38bdf8';
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = s.health < 65 ? '#dc2626' : '#0284c7';
+      ctx.lineWidth = 1.8;
       ctx.stroke();
 
       ctx.beginPath();
       ctx.arc(pt.x, pt.y, 2, 0, Math.PI * 2);
-      ctx.fillStyle = s.health < 65 ? '#ef4444' : '#38bdf8';
+      ctx.fillStyle = s.health < 65 ? '#dc2626' : '#0284c7';
       ctx.fill();
 
       if (APP.mapState.scale >= 1.3) {
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '700 8px Rajdhani, sans-serif';
+        ctx.fillStyle = '#475569';
+        ctx.font = '600 9px Inter, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(`VSN ${s.km}k`, pt.x, pt.y - 7);
       }
@@ -828,38 +822,37 @@ function drawRailTrack(from, to, track, isHovered) {
 
       ctx.save();
       const pulseTime = Date.now() / 320;
-      const pulseRadius = 10 + Math.sin(pulseTime) * 3;
+      const pulseRadius = 9 + Math.sin(pulseTime) * 3;
       ctx.beginPath();
       ctx.arc(pt.x, pt.y, pulseRadius, 0, Math.PI * 2);
-      ctx.fillStyle = r.tsr === 0 ? 'rgba(239,68,68,0.25)' : 'rgba(245,158,11,0.25)';
+      ctx.fillStyle = r.tsr === 0 ? 'rgba(220,38,38,0.2)' : 'rgba(217,119,6,0.2)';
       ctx.fill();
 
       ctx.beginPath();
-      ctx.arc(pt.x, pt.y, 7.5, 0, Math.PI * 2);
+      ctx.arc(pt.x, pt.y, 7, 0, Math.PI * 2);
       ctx.fillStyle = r.tsr === 0 ? '#dc2626' : '#d97706';
-      ctx.shadowColor = r.tsr === 0 ? '#ef4444' : '#f59e0b';
-      ctx.shadowBlur = 8;
       ctx.fill();
       ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 2;
       ctx.stroke();
 
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 8px Inter';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.shadowBlur = 0;
       ctx.fillText(r.tsr === 0 ? '⛔' : '⚠', pt.x, pt.y);
 
-      // KM Badge Pill
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(pt.x - 22, pt.y + 9, 44, 13);
-      ctx.strokeStyle = r.tsr === 0 ? '#ef4444' : '#f59e0b';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(pt.x - 22, pt.y + 9, 44, 13);
-
+      // KM Badge Pill (Clean light tag)
       ctx.fillStyle = '#ffffff';
-      ctx.font = '700 8px Rajdhani, sans-serif';
+      ctx.beginPath();
+      ctx.roundRect(pt.x - 22, pt.y + 8, 44, 14, 3);
+      ctx.fill();
+      ctx.strokeStyle = r.tsr === 0 ? '#dc2626' : '#d97706';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.fillStyle = '#1e293b';
+      ctx.font = '700 8px Inter, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(`KM ${r.km}`, pt.x, pt.y + 15);
       ctx.restore();
@@ -876,8 +869,8 @@ function tracePath(ctx, x1, y1, x2, y2, cpx, cpy, isBezier) {
 function drawDoubleRailSleepers(x1, y1, x2, y2, cpx, cpy, isBezier, color) {
   const steps = 30;
   ctx.save();
-  ctx.strokeStyle = color.replace(')', ',0.3)').replace('rgb', 'rgba');
-  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = 'rgba(100, 116, 139, 0.35)';
+  ctx.lineWidth = 1.2;
 
   for (let i = 1; i < steps; i++) {
     const t = i / steps;
@@ -915,13 +908,11 @@ function drawDeviationArrows(x1, y1, x2, y2, cpx, cpy, isBezier) {
 
   ctx.save();
   ctx.globalAlpha = alpha;
-  ctx.fillStyle = '#f97316';
-  ctx.shadowColor = 'rgba(249,115,22,0.8)';
-  ctx.shadowBlur = 10;
+  ctx.fillStyle = '#ea580c';
   ctx.translate(mx, my);
   ctx.rotate(angle);
   ctx.beginPath();
-  ctx.moveTo(6, 0); ctx.lineTo(-4, 5); ctx.lineTo(-4, -5);
+  ctx.moveTo(6, 0); ctx.lineTo(-4, 4.5); ctx.lineTo(-4, -4.5);
   ctx.closePath(); ctx.fill();
   ctx.restore();
 }
@@ -929,19 +920,18 @@ function drawDeviationArrows(x1, y1, x2, y2, cpx, cpy, isBezier) {
 function drawBlockedIndicator(x1, y1, x2, y2) {
   const mx = (x1+x2)/2, my = (y1+y2)/2;
   const t = (Date.now() % 1500) / 1500;
-  const alpha = 0.4 + 0.6 * Math.abs(Math.sin(t * Math.PI));
+  const alpha = 0.5 + 0.5 * Math.abs(Math.sin(t * Math.PI));
 
   ctx.save();
-  ctx.fillStyle = `rgba(239,68,68,${alpha})`;
-  ctx.shadowColor = 'rgba(239,68,68,0.6)'; ctx.shadowBlur = 12;
+  ctx.fillStyle = `rgba(220,38,38,${alpha})`;
   ctx.beginPath(); ctx.arc(mx, my, 6, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+  ctx.fillStyle = `#ffffff`;
   ctx.font = 'bold 8px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText('✕', mx, my);
   ctx.restore();
 }
 
-// ─── Draw Station – Map Pin Style ──────────────────────────
+// ─── Draw Station – Google Maps Pin & Dot Style ──────────────
 function drawStation(station, isHovered) {
   const { x, y, type, id, name } = station;
   const isTerminal = type === 'terminal';
@@ -949,17 +939,12 @@ function drawStation(station, isHovered) {
 
   ctx.save();
 
-  if (isHovered) {
-    ctx.shadowColor = 'rgba(96,165,250,0.8)';
-    ctx.shadowBlur = 24;
-  }
-
   if (isTerminal) {
     // Map pin style for terminals
     const pinH = isHovered ? 22 : 18;
     const pinW = isHovered ? 14 : 12;
 
-    // Pin body
+    // Pin body (Google Maps red/blue landmark pin)
     ctx.beginPath();
     ctx.arc(x, y - pinH/2, pinW/2, Math.PI, 0);
     ctx.lineTo(x + pinW/2, y - pinH/2);
@@ -967,68 +952,66 @@ function drawStation(station, isHovered) {
     ctx.quadraticCurveTo(x - pinW/2, y - pinH/4, x - pinW/2, y - pinH/2);
     ctx.closePath();
 
-    ctx.fillStyle = isHovered ? '#1d4ed8' : '#1e40af';
+    ctx.fillStyle = isHovered ? '#1e3a5f' : '#254b77';
     ctx.fill();
-    ctx.strokeStyle = isHovered ? '#93c5fd' : '#60a5fa';
+    ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
     // Inner circle
     ctx.beginPath();
     ctx.arc(x, y - pinH/2, 3, 0, Math.PI * 2);
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = '#ffffff';
     ctx.fill();
 
   } else if (isJunction) {
-    // Diamond for junctions
-    const r = isHovered ? 7 : 5;
+    // Junction marker – crisp white circle with blue boundary
+    const r = isHovered ? 6 : 5;
     ctx.beginPath();
-    ctx.moveTo(x, y - r); ctx.lineTo(x + r, y);
-    ctx.lineTo(x, y + r); ctx.lineTo(x - r, y);
-    ctx.closePath();
-    ctx.fillStyle = isHovered ? '#1e40af' : '#1e3a8a';
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
     ctx.fill();
-    ctx.strokeStyle = isHovered ? '#60a5fa' : '#3b82f6';
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = isHovered ? '#1e3a5f' : '#2563eb';
+    ctx.lineWidth = 2.2;
     ctx.stroke();
 
   } else {
-    // Small circle for regular stations
+    // Small transit dot for regular stations
     ctx.beginPath();
-    ctx.arc(x, y, isHovered ? 5 : 4, 0, Math.PI * 2);
-    ctx.fillStyle = '#1e3a8a';
+    ctx.arc(x, y, isHovered ? 4 : 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
     ctx.fill();
-    ctx.strokeStyle = '#60a5fa';
+    ctx.strokeStyle = '#64748b';
     ctx.lineWidth = 1.5;
     ctx.stroke();
   }
 
-  // Label
+  // Station Label (Google Maps clean light map label)
   const showLabel = APP.mapState.scale > 0.65 || isTerminal || isHovered;
   if (showLabel) {
     const fontSize = isTerminal
-      ? Math.max(8, Math.min(12, 11 * APP.mapState.scale))
-      : Math.max(6, Math.min(10, 9 * APP.mapState.scale));
+      ? Math.max(9, Math.min(12, 11 * APP.mapState.scale))
+      : Math.max(8, Math.min(10, 9 * APP.mapState.scale));
 
-    ctx.font = `${isTerminal ? '700' : '500'} ${fontSize}px Inter`;
+    ctx.font = `${isTerminal ? '600' : '500'} ${fontSize}px Inter, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
 
-    const labelY = y + (isTerminal ? 6 : 8);
+    const labelY = y + (isTerminal ? 6 : 7);
     const displayName = (APP.mapState.scale > 1.1 || isHovered) ? name : (station.code || id);
     const textWidth = ctx.measureText(displayName).width;
 
-    // Label background
-    const pad = 3;
-    ctx.fillStyle = 'rgba(15,23,42,0.85)';
-    ctx.strokeStyle = 'rgba(96,165,250,0.2)';
-    ctx.lineWidth = 0.5;
+    // Label background pill (Crisp white pill with subtle border)
+    const pad = 4;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 0.8;
     ctx.beginPath();
     ctx.roundRect(x - textWidth/2 - pad, labelY - 1, textWidth + pad*2, fontSize + 4, 3);
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = isTerminal ? '#93c5fd' : '#60a5fa';
+    ctx.fillStyle = isTerminal ? '#0f172a' : '#334155';
     ctx.fillText(displayName, x, labelY);
   }
 

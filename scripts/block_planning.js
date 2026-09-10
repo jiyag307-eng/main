@@ -342,12 +342,12 @@ function drawGantt() {
   });
 
   // Header background
-  ctx.fillStyle = '#1e3a8a';
+  ctx.fillStyle = '#254b77';
   ctx.fillRect(0, 0, W, HEADER - 8);
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 11px Inter, sans-serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '600 11px Inter, sans-serif';
   ctx.textAlign = 'left';
-  ctx.fillText('SECTION', 6, 18);
+  ctx.fillText('SECTION', 8, 18);
 
   // Tooltip hover
   attachGanttTooltip(canvas, ROWS, LABEL_W, HEADER, ROW_H, plotW, W);
@@ -741,7 +741,7 @@ function renderBPAiPredictions(filterQuery = '', filterCorridor = 'all') {
       <!-- Chance of Block Meter -->
       <div class="bpp-meter-box">
         <div class="bpp-meter-top">
-          <span class="bpp-meter-label">AI Chance of Block Required</span>
+          <span class="bpp-meter-label">Track Block Necessity Probability</span>
           <span class="bpp-meter-pct" style="color:${tierColor};">${chance}%</span>
         </div>
         <div class="bpp-meter-bar">
@@ -751,13 +751,13 @@ function renderBPAiPredictions(filterQuery = '', filterCorridor = 'all') {
 
       <!-- Why Block is Needed -->
       <div class="bpp-reason">
-        <strong style="color:var(--blue-900);">AI Diagnostic Cause:</strong> ${item.whyBlockNeeded}
+        <strong style="color:var(--gray-800);">Inspection Cause:</strong> ${item.whyBlockNeeded}
       </div>
 
-      <!-- Where Can Be What (AI Intelligent Shadow Recommendation) -->
+      <!-- Where Can Be What (Integrated Corridor Maintenance Recommendation) -->
       <div class="bpp-rec-box">
         <div class="bpp-rec-title">
-          <span>🎯 AI Recommendation: Where Can Be What</span>
+          <span>📌 Corridor Recommendation: Where Can Be What</span>
           <span class="bpp-prio-tag">Priority Index: ${item.whereCanBeWhat.prioScore}/100</span>
         </div>
         <div class="bpp-rec-row">
@@ -769,19 +769,19 @@ function renderBPAiPredictions(filterQuery = '', filterCorridor = 'all') {
           <span class="bpp-rec-val" style="color:#0f172a;font-weight:500;">${item.whereCanBeWhat.what}</span>
         </div>
         <div class="bpp-rec-row">
-          <span class="bpp-rec-lbl">Optimal Shadow Window:</span>
-          <span class="bpp-rec-val" style="color:#059669;font-weight:700;">${item.whereCanBeWhat.optimalWindow}</span>
+          <span class="bpp-rec-lbl">Optimal Traffic Slot:</span>
+          <span class="bpp-rec-val" style="color:#15803d;font-weight:700;">${item.whereCanBeWhat.optimalWindow}</span>
         </div>
         <div class="bpp-rec-row">
-          <span class="bpp-rec-lbl">Train Punctuality Impact:</span>
+          <span class="bpp-rec-lbl">Traffic Impact:</span>
           <span class="bpp-rec-val" style="color:var(--gray-600);">${item.whereCanBeWhat.trainsAffected}</span>
         </div>
       </div>
 
       <div class="bpp-actions">
-        <span style="font-size:11px;color:var(--gray-400);">Slot: <strong>${item.whereCanBeWhat.suggestedSlot}</strong></span>
-        <button class="bpp-apply-btn" onclick="applyAiBlockRecommendation('${item.id}')">
-          ⚡ Auto-Integrate into Block Plan
+        <span style="font-size:11px;color:var(--gray-400);">Recommended Slot: <strong>${item.whereCanBeWhat.suggestedSlot}</strong></span>
+        <button class="bpp-apply-btn" onclick="applyAiBlockRecommendation('${item.id}')" style="background:var(--blue-700);box-shadow:none;">
+          ⚡ Approve &amp; Integrate into Master Schedule
         </button>
       </div>
     </div>`;

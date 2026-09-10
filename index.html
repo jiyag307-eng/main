@@ -598,27 +598,27 @@
       <div class="bp-header-row">
         <div class="bp-header-left">
           <div class="bp-title-block">
-            <div class="bp-icon-wrap">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><rect x="2" y="3" width="20" height="14" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M5 10h2M17 10h2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            <div class="bp-icon-wrap" style="background:#e8f1fb;color:var(--blue-700);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M5 10h2M17 10h2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
             </div>
             <div>
-              <h2 class="bp-main-title">AI Block Planning System</h2>
-              <p class="bp-main-sub">Automatic Block Scheduling · Engineering · TRD · S&amp;T</p>
+              <h2 class="bp-main-title">Automated Block Planning System</h2>
+              <p class="bp-main-sub">Integrated Maintenance Scheduling · Engineering · TRD · S&amp;T</p>
             </div>
           </div>
         </div>
         <div class="bp-header-right">
-          <div class="bp-live-chip"><span class="live-dot"></span>Live Sync</div>
-          <button class="bp-optimize-btn" id="bp-optimize-btn" onclick="runAIOptimizer()">
+          <div class="bp-live-chip" style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;"><span class="live-dot" style="background:#16a34a;"></span>Live Network</div>
+          <button class="bp-optimize-btn" id="bp-optimize-btn" onclick="runAIOptimizer()" style="background:var(--blue-700);border:none;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            Run AI Optimizer
+            Generate Optimized Schedule
           </button>
           <div class="bp-view-toggle">
             <button class="bp-vt-btn" id="bpvt-daily" onclick="switchBPView('daily')" title="Daily Block Records & Execution Logs">📅 Daily Records</button>
-            <button class="bp-vt-btn active" id="bpvt-week" onclick="switchBPView('week')" title="Weekly Corridors & Shadow Schedule">🗓️ Weekly Records</button>
+            <button class="bp-vt-btn active" id="bpvt-week" onclick="switchBPView('week')" title="Weekly Corridors & Master Schedule">🗓️ Weekly Records</button>
             <button class="bp-vt-btn" id="bpvt-month" onclick="switchBPView('month')" title="Monthly Mega-Block Quotas & Overhaul">📊 Monthly Records</button>
-            <button class="bp-vt-btn" id="bpvt-ai-predict" onclick="switchBPView('ai-predict')" title="AI Block Probability & Where Can Be What" style="background:rgba(124,58,237,0.12);color:#7c3aed;border:1px solid rgba(124,58,237,0.3);font-weight:700;">
-              🤖 AI Chances &amp; Tracking
+            <button class="bp-vt-btn" id="bpvt-ai-predict" onclick="switchBPView('ai-predict')" title="Predictive Block Tracking & Where Can Be What" style="background:#f1f5f9;color:var(--blue-800);border:1px solid var(--gray-300);font-weight:600;">
+              📈 Block Probability &amp; Tracking
             </button>
           </div>
         </div>
@@ -807,13 +807,13 @@
               </table>
             </div>
 
-            <!-- AI Predictive Tracking & 'Where Can Be What' Container -->
+            <!-- Predictive Block Tracking & 'Where Can Be What' Container -->
             <div class="bp-ai-predict-wrap hidden" id="bp-ai-predict-wrap">
-              <div class="bp-ai-banner">
-                <div class="bp-ai-banner-icon">🤖</div>
+              <div class="bp-ai-banner" style="background:#f8fafc;border:1px solid var(--gray-200);">
+                <div class="bp-ai-banner-icon" style="background:#e8f1fb;color:var(--blue-800);box-shadow:none;border:1px solid var(--gray-200);">📊</div>
                 <div>
-                  <h4 style="margin:0 0 2px 0;font-size:13px;font-weight:700;color:var(--blue-900);">AI Predictive Block Intelligence Model</h4>
-                  <p style="margin:0;font-size:11px;color:var(--gray-500);">Evaluates Track Wear, GMT Stress, Sensor Anomalies &amp; Train Traffic to pinpoint high-probability block zones and zero-conflict execution windows.</p>
+                  <h4 style="margin:0 0 2px 0;font-size:13px;font-weight:700;color:var(--gray-800);">Predictive Track Wear &amp; Maintenance Vulnerability Index</h4>
+                  <p style="margin:0;font-size:11px;color:var(--gray-500);">Analyses USFD rail ultrasonic testing, track geometry index (TGI), axle oscillation sensors &amp; traffic GMT to identify high-probability block zones.</p>
                 </div>
               </div>
               <div class="bp-predict-grid" id="bp-predict-grid"></div>
