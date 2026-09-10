@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles/main.css?v=20260911_4" />
+  <link rel="stylesheet" href="styles/main.css?v=20260911_5" />
 </head>
 <body>
 
@@ -371,6 +371,23 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
                 ➕ Add Repair Location (KM)
               </button>
+            </div>
+          </div>
+
+          <div class="sidebar-section">
+            <h3 class="sidebar-title">VSN AI Simulation (Demo)</h3>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <button class="map-ctrl-btn" id="btn-simulate-vsn-fault" onclick="simulateVsnFault('VSN-024')" title="Simulate track fault on TRK009 via VSN-024" style="background:#fff1f0;color:#d93025;border:1px solid #ffa39e;font-weight:600;box-shadow:0 1px 2px rgba(60,64,67,0.1);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                ⚡ Simulate Fault (VSN-024)
+              </button>
+              <button class="map-ctrl-btn" id="btn-reset-vsn-simulation" onclick="resetVsnSimulation()" title="Reset all virtual sensors to normal safe telemetry" style="background:#ffffff;color:#1e8e3e;border:1px solid #b7eb8f;font-weight:600;box-shadow:0 1px 2px rgba(60,64,67,0.1);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.85"/></svg>
+                🔄 Reset Simulation
+              </button>
+            </div>
+            <div style="font-size:10px;color:#5f6368;line-height:1.35;margin-top:2px;background:#f8f9fa;padding:6px 8px;border-radius:6px;border:1px dashed #dadce0;">
+              ℹ️ <strong>Virtual Sensor Network:</strong> Simulated software prototype for hackathon. SCADA/IoT feeds replace inputs in production.
             </div>
           </div>
 
@@ -1105,7 +1122,7 @@
 
 <!-- Scripts -->
 <script src="data/railway_network.js?v=20260911_4"></script>
-<script src="scripts/app.js?v=20260911_4"></script>
+<script src="scripts/app.js?v=20260911_5"></script>
 <script src="scripts/block_planning.js?v=20260911_4"></script>
 </body>
 </html>

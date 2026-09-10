@@ -462,32 +462,196 @@ function getTrackRepairs(trackId) {
   return loadRepairs().filter(r => r.trackId === trackId && r.status === 'active');
 }
 
-// Generate virtual sensors along track corridors
-function getTrackSensors(track) {
-  const distance = track.distance || 50;
-  const hash = (track.id.charCodeAt(0) * 17 + (track.id.charCodeAt(track.id.length - 1) || 0) * 31) % 100;
-  const baseVib = 1.6 + (hash % 20) / 10;
-  const baseTemp = 38 + (hash % 14);
-  const baseHealth = 88 - (hash % 25);
+// ============================================================
+// VIRTUAL SENSOR NETWORK (VSN) – DATA & AI ANOMALY ENGINE
+// ============================================================
 
-  return [
-    {
-      id: `VSN-${track.id}-A`,
-      t: 0.32,
-      km: +(distance * 0.32).toFixed(1),
-      vibration: +(baseVib + 0.3).toFixed(1),
-      temp: +(baseTemp + 1.2).toFixed(1),
-      health: Math.max(50, baseHealth - 5),
-    },
-    {
-      id: `VSN-${track.id}-B`,
-      t: 0.68,
-      km: +(distance * 0.68).toFixed(1),
-      vibration: +(baseVib - 0.2).toFixed(1),
-      temp: +(baseTemp - 0.8).toFixed(1),
-      health: Math.min(99, baseHealth + 8),
-    }
-  ];
+const STORAGE_KEY_VSN = 'trainsync_vsn_telemetry';
+
+function initVsnStore() {
+  const existing = localStorage.getItem(STORAGE_KEY_VSN);
+  if (existing) {
+    try {
+      const parsed = JSON.parse(existing);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch (e) {}
+  }
+
+  const vsnList = [];
+
+  // 1. Mandatory Demonstration Node: VSN-024 on TRK009 at KM 18.5
+  // Gurugram Railway Station (GGN) → Garhi Harsaru Junction (GHH)
+  const trk009 = RAILWAY_DATABASE.tracks.find(t => t.id === 'TRK009');
+  const trk009Dist = trk009?.distance || 25;
+  vsnList.push({
+    vsn_id: 'VSN-024',
+    track_id: 'TRK009',
+    km_position: 18.5,
+    t: Math.min(0.85, 18.5 / trk009Dist),
+    train_speed: 80.0,
+    track_occupancy: 0,
+    track_condition: 'GOOD',
+    vibration_level: 'NORMAL',
+    vibration_val: 1.8,
+    signal_status: 'GREEN',
+    timestamp: new Date().toISOString(),
+    anomaly_score: 8.0,
+    blockage_probability: 8.0,
+    status: 'NORMAL',
+    isSimulatedFault: false
+  });
+
+  // 2. Baseline VSN nodes along other rail tracks
+  RAILWAY_DATABASE.tracks.forEach(track => {
+    if (track.id === 'TRK009') return;
+    const dist = track.distance || 40;
+    const hash = (track.id.charCodeAt(0) * 19 + (track.id.charCodeAt(track.id.length - 1) || 0) * 29) % 100;
+    const baseKm = Math.round(dist * 0.45 * 10) / 10;
+    const vsnNum = String(10 + (hash % 85)).padStart(3, '0');
+
+    vsnList.push({
+      vsn_id: `VSN-${vsnNum}`,
+      track_id: track.id,
+      km_position: baseKm,
+      t: 0.45,
+      train_speed: 80.0,
+      track_occupancy: 0,
+      track_condition: 'GOOD',
+      vibration_level: 'NORMAL',
+      vibration_val: Math.round((1.6 + (hash % 10) / 10) * 10) / 10,
+      signal_status: 'GREEN',
+      timestamp: new Date().toISOString(),
+      anomaly_score: 6.0 + (hash % 5),
+      blockage_probability: 7.0 + (hash % 5),
+      status: 'NORMAL',
+      isSimulatedFault: false
+    });
+  });
+
+  saveVsns(vsnList);
+  return vsnList;
+}
+
+function loadVsns() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_VSN);
+    if (!raw) return initVsnStore();
+    return JSON.parse(raw);
+  } catch (e) {
+    return initVsnStore();
+  }
+}
+
+function saveVsns(vsns) {
+  try {
+    localStorage.setItem(STORAGE_KEY_VSN, JSON.stringify(vsns));
+  } catch (e) {}
+}
+
+function getTrackSensors(track) {
+  const all = loadVsns();
+  const trackVsns = all.filter(v => v.track_id === track.id);
+  if (trackVsns.length > 0) return trackVsns;
+  // Fallback default node if none exists
+  return [{
+    vsn_id: `VSN-${track.id}`,
+    track_id: track.id,
+    km_position: Math.round((track.distance || 30) * 0.45 * 10) / 10,
+    t: 0.45,
+    train_speed: 80.0,
+    track_occupancy: 0,
+    track_condition: 'GOOD',
+    vibration_level: 'NORMAL',
+    vibration_val: 1.8,
+    signal_status: 'GREEN',
+    timestamp: new Date().toISOString(),
+    anomaly_score: 8.0,
+    blockage_probability: 8.0,
+    status: 'NORMAL',
+    isSimulatedFault: false
+  }];
+}
+
+// Transparent explainable AI anomaly detection engine
+function calculateVsnAnomaly(vsn) {
+  const speed = Number(vsn.train_speed ?? 80);
+  const occupancy = Number(vsn.track_occupancy ?? 0);
+  const condition = String(vsn.track_condition || 'GOOD').toUpperCase();
+  const vibration = String(vsn.vibration_level || 'NORMAL').toUpperCase();
+  const signal = String(vsn.signal_status || 'GREEN').toUpperCase();
+
+  let score = 0;
+  const reasons = [];
+
+  // Factor 1: Train speed anomaly (weight 25%)
+  if (speed === 0 && occupancy === 1) {
+    score += 25;
+    reasons.push('Prolonged zero train speed (0 km/h) with active track occupancy');
+  } else if (speed > 0 && speed < 30) {
+    score += 12;
+    reasons.push('Severe speed restriction / train crawling under 30 km/h');
+  }
+
+  // Factor 2: Track occupancy mismatch (weight 20%)
+  if (occupancy === 1) {
+    score += 15;
+    reasons.push('Track section occupancy detected (block segment active)');
+  }
+
+  // Factor 3: Track physical condition (weight 25%)
+  if (condition === 'CRITICAL') {
+    score += 25;
+    reasons.push('Critical track structural defect / geometry deviation');
+  } else if (condition === 'WARNING') {
+    score += 12;
+    reasons.push('Track condition degraded to warning threshold');
+  }
+
+  // Factor 4: Dynamic rail vibration (weight 15%)
+  if (vibration === 'HIGH' || vibration === 'SEVERE') {
+    score += 15;
+    reasons.push('Abnormal rail dynamic oscillation & acoustic vibration');
+  } else if (vibration === 'ELEVATED') {
+    score += 8;
+    reasons.push('Elevated sleeper/ballast vibration levels');
+  }
+
+  // Factor 5: Interlocking signal aspect (weight 15%)
+  if (signal === 'RED') {
+    score += 15;
+    reasons.push('Red interlocking signal aspect active / route locked');
+  } else if (signal === 'YELLOW' || signal === 'CAUTION') {
+    score += 7;
+    reasons.push('Cautionary yellow signal aspect');
+  }
+
+  const anomalyScore = Math.min(100, Math.max(5, Math.round(score * 10) / 10));
+  const blockageProb = Math.min(99, Math.max(5, Math.round(anomalyScore * 1.04 * 10) / 10));
+
+  let status = 'NORMAL';
+  let assessment = 'LOW PROBABILITY OF BLOCKAGE (NORMAL)';
+  if (blockageProb >= 85) {
+    status = 'BLOCKED';
+    assessment = 'HIGH PROBABILITY OF BLOCKAGE';
+  } else if (blockageProb >= 70) {
+    status = 'HIGH RISK';
+    assessment = 'ELEVATED RISK OF BLOCKAGE';
+  } else if (blockageProb >= 40) {
+    status = 'CAUTION';
+    assessment = 'MODERATE RISK - CAUTION ADVISED';
+  }
+
+  if (reasons.length === 0) {
+    reasons.push('All telemetry parameters operating within safe limits');
+  }
+
+  return {
+    anomalyScore,
+    blockageProbability: blockageProb,
+    status,
+    assessment,
+    reasons
+  };
 }
 
 // Control points for bezier curves on key long routes
@@ -518,6 +682,7 @@ function initMap() {
     if (s.name) stationLookup[s.name] = s;
   });
 
+  initVsnStore();
   resizeCanvas();
   attachMapEvents();
 
@@ -885,31 +1050,45 @@ function drawRailTrack(from, to, track, isHovered) {
 
   // ─── Virtual Sensor Nodes & Repair Worksite Markers ────────
   if (APP.mapState.congestionMode) {
-    // 1. Virtual Sensors (Google Maps clean sensor node)
+    // 1. Virtual Sensors (Google Maps clean software-defined sensor node)
     const sensors = getTrackSensors(track);
     sensors.forEach(s => {
       const pt = getTrackPointAtT(s.t, x1, y1, x2, y2, cpx, cpy, isBezier);
-      sensorHitboxes.push({ sensor: s, x: pt.x, y: pt.y, radius: 8, track });
+      sensorHitboxes.push({ sensor: s, x: pt.x, y: pt.y, radius: 9, track });
+
+      const isFault = s.status === 'BLOCKED' || s.isSimulatedFault || (s.blockage_probability >= 85);
+      const isCaution = s.status === 'CAUTION' || s.status === 'HIGH RISK' || (s.blockage_probability >= 40);
+      const sensorColor = isFault ? '#d93025' : isCaution ? '#f9ab00' : '#1a73e8';
 
       ctx.save();
+      // Outer pulse ring if fault
+      if (isFault) {
+        const pulse = 8 + Math.sin(Date.now() / 250) * 2.5;
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, pulse, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(217, 48, 37, 0.2)';
+        ctx.fill();
+      }
+
       ctx.beginPath();
-      ctx.arc(pt.x, pt.y, 4.5, 0, Math.PI * 2);
+      ctx.arc(pt.x, pt.y, isFault ? 5.5 : 4.5, 0, Math.PI * 2);
       ctx.fillStyle = '#ffffff';
       ctx.fill();
-      ctx.strokeStyle = s.health < 65 ? '#d93025' : '#1a73e8';
-      ctx.lineWidth = 1.8;
+      ctx.strokeStyle = sensorColor;
+      ctx.lineWidth = isFault ? 2.2 : 1.8;
       ctx.stroke();
 
       ctx.beginPath();
-      ctx.arc(pt.x, pt.y, 2, 0, Math.PI * 2);
-      ctx.fillStyle = s.health < 65 ? '#d93025' : '#1a73e8';
+      ctx.arc(pt.x, pt.y, isFault ? 2.8 : 2, 0, Math.PI * 2);
+      ctx.fillStyle = sensorColor;
       ctx.fill();
 
-      if (APP.mapState.scale >= 1.2) {
-        ctx.fillStyle = '#3c4043';
-        ctx.font = '600 9px Inter, sans-serif';
+      // VSN Tag Label
+      if (APP.mapState.scale >= 1.05 || isFault) {
+        ctx.fillStyle = isFault ? '#d93025' : '#3c4043';
+        ctx.font = `${isFault ? '700' : '600'} 9px 'Inter', sans-serif`;
         ctx.textAlign = 'center';
-        ctx.fillText(`VSN ${s.km}k`, pt.x, pt.y - 7);
+        ctx.fillText(s.vsn_id || `VSN ${s.km_position}k`, pt.x, pt.y - 8);
       }
       ctx.restore();
     });
@@ -1420,47 +1599,327 @@ function handleTrackPopupRepair() {
 
 function showSensorTelemetryPopup(sensor, track, cx, cy) {
   closePopup(); closeTrackPopup();
+  const vsnId = sensor.vsn_id || sensor.id;
+  APP.mapState.selectedVsnId = vsnId;
+
+  const vsns = loadVsns();
+  const vsn = vsns.find(v => v.vsn_id === vsnId) || sensor;
+  const analysis = calculateVsnAnomaly(vsn);
+
   const popup = document.getElementById('sensor-telemetry-popup');
   const badge = document.getElementById('sensor-popup-badge');
-  badge.textContent = `📡 VIRTUAL SENSOR: ${sensor.id}`;
+  badge.textContent = `📡 VIRTUAL SENSOR NODE: ${vsnId}`;
   badge.className = 'sensor-popup-badge';
 
   const body = document.getElementById('sensor-popup-body');
   const from = stationLookup[track.from]?.name || track.from;
   const to = stationLookup[track.to]?.name || track.to;
 
+  const isBlocked = analysis.status === 'BLOCKED';
+  const isCaution = analysis.status === 'CAUTION' || analysis.status === 'HIGH RISK';
+
+  const statusPill = isBlocked
+    ? '<span style="background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;">🔴 BLOCKED</span>'
+    : isCaution
+    ? '<span style="background:#fef3c7;color:#b45309;border:1px solid #fcd34d;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;">🟡 CAUTION</span>'
+    : '<span style="background:#dcfce7;color:#15803d;border:1px solid #86efac;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;">🟢 NORMAL</span>';
+
+  const probColor = isBlocked ? '#d93025' : isCaution ? '#f9ab00' : '#1e8e3e';
+
   body.innerHTML = `
-    <div class="sensor-hud-title">${track.id}: ${from} → ${to}</div>
-    <div class="sensor-hud-sub">Location: <strong>KM ${sensor.km}</strong> of ${track.distance} km corridor • 10 Hz Telemetry</div>
-    <div class="sensor-hud-grid">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <div style="font-size:15px;font-weight:700;color:#202124;">${vsnId}</div>
+      ${statusPill}
+    </div>
+
+    <div style="font-size:11px;color:#5f6368;margin-bottom:10px;line-height:1.4;">
+      Track: <strong>${track.id}</strong> (${from} → ${to})<br>
+      Location: <strong>KM ${vsn.km_position || sensor.km}</strong> of ${track.distance} km corridor
+    </div>
+
+    <!-- Live Telemetry Grid -->
+    <div class="sensor-hud-grid" style="grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px;">
       <div class="shg-item">
-        <span class="shg-val" style="color:${sensor.vibration > 4.0 ? '#ef4444' : sensor.vibration > 2.5 ? '#f59e0b' : '#38bdf8'};">${sensor.vibration} g</span>
-        <span class="shg-lbl">Oscillation</span>
+        <span class="shg-val" style="color:${vsn.train_speed === 0 ? '#d93025' : '#1e8e3e'};">${vsn.train_speed ?? 80} km/h</span>
+        <span class="shg-lbl">Train Speed</span>
       </div>
       <div class="shg-item">
-        <span class="shg-val" style="color:${sensor.temp > 50 ? '#ef4444' : '#38bdf8'};">${sensor.temp}°C</span>
-        <span class="shg-lbl">Rail Temp</span>
+        <span class="shg-val" style="color:${vsn.track_occupancy ? '#d93025' : '#1e8e3e'};">${vsn.track_occupancy ? 'Detected' : 'Clear'}</span>
+        <span class="shg-lbl">Occupancy</span>
       </div>
       <div class="shg-item">
-        <span class="shg-val" style="color:${sensor.health < 65 ? '#ef4444' : '#10b981'};">${sensor.health}%</span>
-        <span class="shg-lbl">Health</span>
+        <span class="shg-val" style="color:${vsn.track_condition === 'CRITICAL' ? '#d93025' : vsn.track_condition === 'WARNING' ? '#f9ab00' : '#1e8e3e'};">${vsn.track_condition || 'GOOD'}</span>
+        <span class="shg-lbl">Track Cond.</span>
+      </div>
+      <div class="shg-item">
+        <span class="shg-val" style="color:${vsn.vibration_level === 'HIGH' ? '#d93025' : '#1e8e3e'};">${vsn.vibration_level || 'NORMAL'}</span>
+        <span class="shg-lbl">Vibration</span>
+      </div>
+      <div class="shg-item">
+        <span class="shg-val" style="color:${vsn.signal_status === 'RED' ? '#d93025' : vsn.signal_status === 'YELLOW' ? '#f9ab00' : '#1e8e3e'};">${vsn.signal_status || 'GREEN'}</span>
+        <span class="shg-lbl">Signal</span>
+      </div>
+      <div class="shg-item">
+        <span class="shg-val" style="color:#1a73e8;">${vsn.vibration_val || 1.8} g</span>
+        <span class="shg-lbl">Dynamic Osc.</span>
       </div>
     </div>
-    <div class="sensor-hud-tsr">
-      🚦 Line Traffic Status: <strong>${sensor.health > 80 ? 'Normal Free Flow (130 km/h)' : 'Speed Monitored / Moderate Wear'}</strong>
+
+    <!-- AI Anomaly Detection & Blockage Probability -->
+    <div style="background:#f8f9fa;border:1px solid #dadce0;border-radius:8px;padding:10px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:600;margin-bottom:4px;">
+        <span style="color:#5f6368;">Anomaly Score:</span>
+        <span style="color:${probColor};">${analysis.anomalyScore}%</span>
+      </div>
+      <div style="height:6px;background:#e8eaed;border-radius:3px;overflow:hidden;margin-bottom:8px;">
+        <div style="height:100%;width:${analysis.anomalyScore}%;background:${probColor};border-radius:3px;"></div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:600;margin-bottom:4px;">
+        <span style="color:#5f6368;">Blockage Probability:</span>
+        <span style="color:${probColor}; font-weight:700;">${analysis.blockageProbability}%</span>
+      </div>
+      <div style="height:6px;background:#e8eaed;border-radius:3px;overflow:hidden;margin-bottom:8px;">
+        <div style="height:100%;width:${analysis.blockageProbability}%;background:${probColor};border-radius:3px;"></div>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:${probColor};margin-top:6px;padding:4px 6px;background:#ffffff;border-radius:4px;border:1px solid #e8eaed;">
+        AI Assessment: ${analysis.assessment}
+      </div>
+
+      <div style="margin-top:6px;">
+        <span style="font-size:10px;font-weight:700;color:#5f6368;text-transform:uppercase;letter-spacing:0.5px;">Reasons:</span>
+        <ul style="margin:4px 0 0 16px;padding:0;font-size:10.5px;color:#3c4043;line-height:1.4;">
+          ${analysis.reasons.map(r => `<li>${r}</li>`).join('')}
+        </ul>
+      </div>
     </div>
-    <div class="sensor-hud-actions">
-      <button class="sensor-hud-btn primary" onclick="closeSensorPopup(); openQueryModal('${track.id}');">
-        ⚡ Raise Query on Track
-      </button>
-      <button class="sensor-hud-btn danger" onclick="closeSensorPopup(); openAddRepairModal('${track.id}', ${sensor.km});">
-        📍 Add Worksite Here
-      </button>
+
+    <!-- Actions -->
+    <div class="sensor-hud-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
+      ${isBlocked
+        ? `<button class="sensor-hud-btn" onclick="restoreSingleVsn('${vsnId}');" style="background:#ffffff;color:#1e8e3e;border:1px solid #b7eb8f;font-weight:600;padding:6px 10px;">
+             🔄 Restore Normal
+           </button>
+           <button class="sensor-hud-btn" onclick="showVsnAlternativeRoute('${track.id}');" style="background:#1a73e8;color:#ffffff;border:none;font-weight:600;padding:6px 10px;">
+             🗺 View Alternative Route
+           </button>`
+        : `<button class="sensor-hud-btn" onclick="simulateVsnFault('${vsnId}');" style="background:#fff1f0;color:#d93025;border:1px solid #ffa39e;font-weight:600;padding:6px 10px;">
+             ⚡ Simulate Fault
+           </button>
+           <button class="sensor-hud-btn" onclick="openQueryModal('${track.id}');" style="background:#ffffff;color:#1a73e8;border:1px solid #dadce0;padding:6px 10px;">
+             📝 Raise Query
+           </button>`
+      }
+    </div>
+
+    <div style="font-size:9.5px;color:#80868b;text-align:center;margin-top:8px;font-style:italic;">
+      Virtual Sensor Network — Simulated Prototype Data
     </div>
   `;
 
   positionPopup(popup, cx, cy);
   popup.classList.remove('hidden');
+}
+
+// ─────────────────────────────────────────────────────────────
+// VSN SIMULATION & BLOCKAGE DISPATCH CONTROLS
+// ─────────────────────────────────────────────────────────────
+
+function simulateVsnFault(vsnId = 'VSN-024') {
+  const vsns = loadVsns();
+  const vsn = vsns.find(v => v.vsn_id === vsnId) || vsns[0];
+  if (!vsn) return;
+
+  // 1. Inject abnormal critical telemetry
+  vsn.train_speed = 0.0;
+  vsn.track_occupancy = 1;
+  vsn.track_condition = 'CRITICAL';
+  vsn.vibration_level = 'HIGH';
+  vsn.vibration_val = 4.8;
+  vsn.signal_status = 'RED';
+  vsn.isSimulatedFault = true;
+  vsn.timestamp = new Date().toISOString();
+
+  const analysis = calculateVsnAnomaly(vsn);
+  vsn.anomaly_score = 91.0;
+  vsn.blockage_probability = 94.0;
+  vsn.status = 'BLOCKED';
+  vsn.ai_assessment = analysis.assessment;
+  vsn.reasons = analysis.reasons;
+
+  saveVsns(vsns);
+
+  // 2. Mark corresponding track as BLOCKED in RAILWAY_DATABASE
+  const track = RAILWAY_DATABASE.tracks.find(t => t.id === vsn.track_id);
+  const from = stationLookup[track?.from]?.name || track?.from || '?';
+  const to = stationLookup[track?.to]?.name || track?.to || '?';
+
+  if (track) {
+    track.status = 'blocked';
+    track.reason = `VSN AI Anomaly: High Blockage Probability (94%) detected by ${vsn.vsn_id} at KM ${vsn.km_position} (${vsn.reasons.slice(0, 2).join(', ')})`;
+  }
+
+  // 3. Generate Critical Alert in Alerts system
+  const alertId = 'ALT-' + vsn.vsn_id;
+  RAILWAY_DATABASE.alerts = RAILWAY_DATABASE.alerts.filter(a => a.id !== alertId);
+  RAILWAY_DATABASE.alerts.unshift({
+    id: alertId,
+    track: vsn.track_id,
+    type: 'critical',
+    time: new Date().toISOString(),
+    message: `🔴 TRACK BLOCKAGE DETECTED: Track ${vsn.track_id} (${from} → ${to} @ KM ${vsn.km_position}) flagged by ${vsn.vsn_id} with 94% blockage probability. Reasons: Critical track condition + abnormal vibration + zero train speed.`
+  });
+
+  // 4. Alternative Route Calculation
+  let affectedTrain = RAILWAY_DATABASE.trains.find(t => t.currentSection === vsn.track_id);
+  if (!affectedTrain) {
+    affectedTrain = RAILWAY_DATABASE.trains.find(t => t.id === '12004') || RAILWAY_DATABASE.trains[0];
+  }
+
+  let altRoute = null;
+  if (affectedTrain && track) {
+    altRoute = findAlternativeRoute(track.id, affectedTrain.id);
+    if (altRoute) {
+      APP.mapState.deviationRouteTrackIds = altRoute.trackPath;
+      showDeviationOverlay({
+        trainId: affectedTrain.id,
+        alternateRoute: altRoute.stationPath,
+        totalDistance: altRoute.totalDistance,
+        issuedByName: `VSN Autonomous AI (${vsn.vsn_id})`
+      });
+    }
+  }
+
+  // 5. Update UI displays
+  updateNetworkStatusBar();
+  initAlertTicker();
+  renderAlertsList();
+  renderTracksGrid();
+
+  // If popup is currently open, re-render it
+  const popup = document.getElementById('sensor-telemetry-popup');
+  if (popup && !popup.classList.contains('hidden') && APP.mapState.selectedVsnId === vsn.vsn_id) {
+    showSensorTelemetryPopup(vsn, track, popup.offsetLeft, popup.offsetTop);
+  }
+
+  showToast(`🔴 VSN Blockage Triggered on ${track?.id || vsn.track_id} (${vsn.vsn_id}). Track marked BLOCKED. Alternative route displayed in BLUE.`, 'error');
+
+  // Notify backend if reachable
+  try {
+    fetch('/api/vsn/simulate-fault', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vsn_id: vsn.vsn_id, severity: 'CRITICAL' })
+    }).catch(() => {});
+  } catch (e) {}
+}
+
+function resetVsnSimulation() {
+  const vsns = loadVsns();
+  vsns.forEach(v => {
+    v.train_speed = 80.0;
+    v.track_occupancy = 0;
+    v.track_condition = 'GOOD';
+    v.vibration_level = 'NORMAL';
+    v.vibration_val = 1.8;
+    v.signal_status = 'GREEN';
+    v.anomaly_score = 8.0;
+    v.blockage_probability = 8.0;
+    v.status = 'NORMAL';
+    v.isSimulatedFault = false;
+    v.timestamp = new Date().toISOString();
+  });
+  saveVsns(vsns);
+
+  // Restore tracks blocked by VSN faults
+  RAILWAY_DATABASE.tracks.forEach(t => {
+    if (t.reason && t.reason.includes('VSN AI Anomaly')) {
+      t.status = 'operational';
+      t.reason = null;
+    }
+  });
+
+  // Clear VSN alert
+  RAILWAY_DATABASE.alerts = RAILWAY_DATABASE.alerts.filter(a => !a.id.startsWith('ALT-VSN'));
+
+  // Clear deviation route from map
+  clearDeviationOverlay();
+
+  // Update UI
+  updateNetworkStatusBar();
+  initAlertTicker();
+  renderAlertsList();
+  renderTracksGrid();
+  closeSensorPopup();
+
+  showToast(`🔄 VSN Simulation Reset: All virtual sensors returned to normal. Tracks restored.`, 'info');
+
+  // Notify backend if reachable
+  try {
+    fetch('/api/vsn/reset', { method: 'POST' }).catch(() => {});
+  } catch (e) {}
+}
+
+function restoreSingleVsn(vsnId) {
+  const vsns = loadVsns();
+  const vsn = vsns.find(v => v.vsn_id === vsnId);
+  if (!vsn) return;
+
+  vsn.train_speed = 80.0;
+  vsn.track_occupancy = 0;
+  vsn.track_condition = 'GOOD';
+  vsn.vibration_level = 'NORMAL';
+  vsn.vibration_val = 1.8;
+  vsn.signal_status = 'GREEN';
+  vsn.anomaly_score = 8.0;
+  vsn.blockage_probability = 8.0;
+  vsn.status = 'NORMAL';
+  vsn.isSimulatedFault = false;
+  vsn.timestamp = new Date().toISOString();
+
+  saveVsns(vsns);
+
+  const track = RAILWAY_DATABASE.tracks.find(t => t.id === vsn.track_id);
+  if (track && track.reason && track.reason.includes(vsnId)) {
+    track.status = 'operational';
+    track.reason = null;
+  }
+
+  RAILWAY_DATABASE.alerts = RAILWAY_DATABASE.alerts.filter(a => a.id !== ('ALT-' + vsnId));
+
+  updateNetworkStatusBar();
+  initAlertTicker();
+  renderAlertsList();
+  renderTracksGrid();
+
+  if (track) {
+    showSensorTelemetryPopup(vsn, track, 400, 300);
+  }
+  showToast(`✅ ${vsnId} restored to normal safe operations.`, 'info');
+}
+
+function showVsnAlternativeRoute(trackId) {
+  closeSensorPopup();
+  let affectedTrain = RAILWAY_DATABASE.trains.find(t => t.currentSection === trackId);
+  if (!affectedTrain) {
+    affectedTrain = RAILWAY_DATABASE.trains.find(t => t.id === '12004') || RAILWAY_DATABASE.trains[0];
+  }
+  if (!affectedTrain) return;
+
+  const result = findAlternativeRoute(trackId, affectedTrain.id);
+  if (result) {
+    APP.mapState.deviationRouteTrackIds = result.trackPath;
+    showDeviationOverlay({
+      trainId: affectedTrain.id,
+      alternateRoute: result.stationPath,
+      totalDistance: result.totalDistance,
+      issuedByName: 'VSN Autonomous AI Detection'
+    });
+    showToast(`🗺 Alternative route displayed in BLUE for Train ${affectedTrain.id}`, 'info');
+  } else {
+    openDeviationModal(trackId);
+  }
 }
 
 function showRepairTelemetryPopup(repair, track, cx, cy) {

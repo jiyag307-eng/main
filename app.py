@@ -299,12 +299,53 @@ def create_tables():
         )
     """)
 
+    # --------------------------------------------------------
+    # VIRTUAL SENSOR NODES (VSN - Software Telemetry)
+    # --------------------------------------------------------
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS virtual_sensor_nodes (
+
+            vsn_id VARCHAR(30) PRIMARY KEY,
+
+            track_id VARCHAR(30) NOT NULL,
+
+            latitude DECIMAL(10,6),
+
+            longitude DECIMAL(10,6),
+
+            km_position DECIMAL(10,2),
+
+            train_speed DECIMAL(10,2) DEFAULT 80.0,
+
+            track_occupancy INT DEFAULT 0,
+
+            track_condition VARCHAR(50) DEFAULT 'GOOD',
+
+            vibration_level VARCHAR(50) DEFAULT 'NORMAL',
+
+            signal_status VARCHAR(20) DEFAULT 'GREEN',
+
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+            anomaly_score DECIMAL(5,2) DEFAULT 8.0,
+
+            blockage_probability DECIMAL(5,2) DEFAULT 8.0,
+
+            status VARCHAR(50) DEFAULT 'NORMAL',
+
+            FOREIGN KEY (track_id)
+                REFERENCES tracks(track_id)
+
+        )
+    """)
+
     connection.commit()
 
     cursor.close()
     connection.close()
 
-    print("All MySQL tables created.")
+    print("All MySQL tables created including Virtual Sensor Network (VSN).")
 
 
 # ============================================================
@@ -1849,6 +1890,336 @@ def decisions():
     connection.close()
 
     return jsonify(data)
+
+
+# ============================================================
+# VIRTUAL SENSOR NETWORK (VSN) – AI ANOMALY DETECTION ENGINE
+# ============================================================
+
+DEFAULT_VSN_DATA = [
+    {
+        "vsn_id": "VSN-024",
+        "track_id": "TRK009",
+        "latitude": 28.4595,
+        "longitude": 77.0266,
+        "km_position": 18.5,
+        "train_speed": 80.0,
+        "track_occupancy": 0,
+        "track_condition": "GOOD",
+        "vibration_level": "NORMAL",
+        "signal_status": "GREEN",
+        "anomaly_score": 8.0,
+        "blockage_probability": 8.0,
+        "status": "NORMAL"
+    },
+    {
+        "vsn_id": "VSN-001",
+        "track_id": "TRK001",
+        "latitude": 28.6142,
+        "longitude": 77.1585,
+        "km_position": 12.0,
+        "train_speed": 85.0,
+        "track_occupancy": 0,
+        "track_condition": "GOOD",
+        "vibration_level": "NORMAL",
+        "signal_status": "GREEN",
+        "anomaly_score": 6.0,
+        "blockage_probability": 6.0,
+        "status": "NORMAL"
+    },
+    {
+        "vsn_id": "VSN-005",
+        "track_id": "TRK005",
+        "latitude": 28.5882,
+        "longitude": 77.2534,
+        "km_position": 8.2,
+        "train_speed": 75.0,
+        "track_occupancy": 0,
+        "track_condition": "GOOD",
+        "vibration_level": "NORMAL",
+        "signal_status": "GREEN",
+        "anomaly_score": 9.0,
+        "blockage_probability": 9.0,
+        "status": "NORMAL"
+    },
+    {
+        "vsn_id": "VSN-014",
+        "track_id": "TRK014",
+        "latitude": 28.6653,
+        "longitude": 77.3120,
+        "km_position": 22.4,
+        "train_speed": 70.0,
+        "track_occupancy": 0,
+        "track_condition": "GOOD",
+        "vibration_level": "NORMAL",
+        "signal_status": "GREEN",
+        "anomaly_score": 7.0,
+        "blockage_probability": 7.0,
+        "status": "NORMAL"
+    }
+]
+
+# In-memory store fallback for demo when MySQL is not initialized
+vsn_memory_store = {item["vsn_id"]: dict(item) for item in DEFAULT_VSN_DATA}
+
+
+def compute_vsn_anomaly(vsn):
+    """
+    Transparent, explainable multi-factor AI anomaly detection engine.
+    Calculates anomaly_score, blockage_probability, and human-readable reasoning.
+    """
+    speed = float(vsn.get("train_speed", 80))
+    occupancy = int(vsn.get("track_occupancy", 0))
+    condition = str(vsn.get("track_condition", "GOOD")).upper()
+    vibration = str(vsn.get("vibration_level", "NORMAL")).upper()
+    signal = str(vsn.get("signal_status", "GREEN")).upper()
+
+    score = 0.0
+    reasons = []
+
+    # Factor 1: Train speed anomaly (weight 25%)
+    if speed == 0 and occupancy == 1:
+        score += 25.0
+        reasons.append("Prolonged zero train speed (0 km/h) with active track occupancy")
+    elif speed < 30 and speed > 0:
+        score += 12.0
+        reasons.append("Severe speed restriction / creeping movement under 30 km/h")
+
+    # Factor 2: Track occupancy mismatch (weight 20%)
+    if occupancy == 1:
+        score += 15.0
+        reasons.append("Track section occupied / block segment continuous presence")
+
+    # Factor 3: Track physical condition (weight 25%)
+    if condition == "CRITICAL":
+        score += 25.0
+        reasons.append("Critical track structural defect / geometry deviation detected")
+    elif condition == "WARNING":
+        score += 12.0
+        reasons.append("Track condition degraded to warning threshold")
+
+    # Factor 4: Dynamic rail vibration (weight 15%)
+    if vibration in ["HIGH", "SEVERE"]:
+        score += 15.0
+        reasons.append("Abnormal high rail oscillation & acoustic vibration")
+    elif vibration == "ELEVATED":
+        score += 8.0
+        reasons.append("Elevated sleeper/ballast vibration levels")
+
+    # Factor 5: Interlocking signal restriction (weight 15%)
+    if signal == "RED":
+        score += 15.0
+        reasons.append("Red interlocking signal aspect active / route locked")
+    elif signal in ["YELLOW", "CAUTION"]:
+        score += 7.0
+        reasons.append("Cautionary yellow signal aspect")
+
+    # Calibration & probability calculation
+    anomaly_score = round(min(100.0, max(5.0, score)), 1)
+    blockage_prob = round(min(99.0, max(5.0, anomaly_score * 1.04)), 1)
+
+    # Classify status based on transparent thresholds
+    if blockage_prob >= 85.0:
+        status = "BLOCKED"
+        assessment = "HIGH PROBABILITY OF BLOCKAGE"
+    elif blockage_prob >= 70.0:
+        status = "HIGH RISK"
+        assessment = "ELEVATED RISK OF BLOCKAGE"
+    elif blockage_prob >= 40.0:
+        status = "CAUTION"
+        assessment = "MODERATE RISK - CAUTION ADVISED"
+    else:
+        status = "NORMAL"
+        assessment = "NORMAL SAFE OPERATIONS"
+        if not reasons:
+            reasons.append("All structural and operational parameters within normal limits")
+
+    return {
+        "anomaly_score": anomaly_score,
+        "blockage_probability": blockage_prob,
+        "status": status,
+        "ai_assessment": assessment,
+        "reasons": reasons
+    }
+
+
+@app.route("/api/vsn", methods=["GET"])
+def get_all_vsn():
+    """Returns all Virtual Sensor Nodes with live telemetry & AI assessment."""
+    try:
+        connection = get_connection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM virtual_sensor_nodes ORDER BY vsn_id ASC")
+        rows = cursor.fetchall()
+        cursor.close()
+        connection.close()
+
+        if rows:
+            for row in rows:
+                analysis = compute_vsn_anomaly(row)
+                row["ai_assessment"] = analysis["ai_assessment"]
+                row["reasons"] = analysis["reasons"]
+            return jsonify(rows)
+    except Exception:
+        pass
+
+    # Fallback in-memory
+    result = []
+    for item in vsn_memory_store.values():
+        analysis = compute_vsn_anomaly(item)
+        full_item = dict(item)
+        full_item.update(analysis)
+        result.append(full_item)
+    return jsonify(result)
+
+
+@app.route("/api/vsn/<vsn_id>", methods=["GET"])
+def get_vsn_by_id(vsn_id):
+    """Returns a specific Virtual Sensor Node."""
+    vsn_id = vsn_id.upper()
+    try:
+        connection = get_connection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM virtual_sensor_nodes WHERE vsn_id = %s", (vsn_id,))
+        row = cursor.fetchone()
+        cursor.close()
+        connection.close()
+        if row:
+            analysis = compute_vsn_anomaly(row)
+            row.update(analysis)
+            return jsonify(row)
+    except Exception:
+        pass
+
+    item = vsn_memory_store.get(vsn_id)
+    if item:
+        analysis = compute_vsn_anomaly(item)
+        full_item = dict(item)
+        full_item.update(analysis)
+        return jsonify(full_item)
+
+    return jsonify({"error": f"VSN {vsn_id} not found"}), 404
+
+
+@app.route("/api/vsn/simulate-fault", methods=["POST"])
+def simulate_vsn_fault():
+    """
+    Simulates abnormal/critical readings for a VSN (e.g. VSN-024) for hackathon demo.
+    """
+    data = request.get_json() or {}
+    vsn_id = data.get("vsn_id", "VSN-024").upper()
+    severity = data.get("severity", "CRITICAL").upper()
+
+    fault_readings = {
+        "train_speed": 0.0,
+        "track_occupancy": 1,
+        "track_condition": "CRITICAL" if severity == "CRITICAL" else "WARNING",
+        "vibration_level": "HIGH",
+        "signal_status": "RED" if severity == "CRITICAL" else "YELLOW"
+    }
+
+    analysis = compute_vsn_anomaly(fault_readings)
+    fault_readings.update(analysis)
+
+    # Update in memory
+    if vsn_id in vsn_memory_store:
+        vsn_memory_store[vsn_id].update(fault_readings)
+
+    # Update in MySQL if active
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+        cursor.execute("""
+            UPDATE virtual_sensor_nodes
+            SET train_speed = %s, track_occupancy = %s, track_condition = %s,
+                vibration_level = %s, signal_status = %s, anomaly_score = %s,
+                blockage_probability = %s, status = %s
+            WHERE vsn_id = %s
+        """, (
+            fault_readings["train_speed"],
+            fault_readings["track_occupancy"],
+            fault_readings["track_condition"],
+            fault_readings["vibration_level"],
+            fault_readings["signal_status"],
+            fault_readings["anomaly_score"],
+            fault_readings["blockage_probability"],
+            fault_readings["status"],
+            vsn_id
+        ))
+        connection.commit()
+        cursor.close()
+        connection.close()
+    except Exception:
+        pass
+
+    return jsonify({
+        "message": f"Simulated fault injected into {vsn_id}.",
+        "vsn_id": vsn_id,
+        "telemetry": fault_readings,
+        "notice": "Virtual Sensor Network — Simulated Prototype Data"
+    })
+
+
+@app.route("/api/vsn/reset", methods=["POST"])
+def reset_vsn_simulation():
+    """Resets all VSNs to normal healthy baseline values."""
+    global vsn_memory_store
+    vsn_memory_store = {item["vsn_id"]: dict(item) for item in DEFAULT_VSN_DATA}
+
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+        for item in DEFAULT_VSN_DATA:
+            cursor.execute("""
+                UPDATE virtual_sensor_nodes
+                SET train_speed = %s, track_occupancy = %s, track_condition = %s,
+                    vibration_level = %s, signal_status = %s, anomaly_score = %s,
+                    blockage_probability = %s, status = %s
+                WHERE vsn_id = %s
+            """, (
+                item["train_speed"],
+                item["track_occupancy"],
+                item["track_condition"],
+                item["vibration_level"],
+                item["signal_status"],
+                item["anomaly_score"],
+                item["blockage_probability"],
+                item["status"],
+                item["vsn_id"]
+            ))
+        connection.commit()
+        cursor.close()
+        connection.close()
+    except Exception:
+        pass
+
+    return jsonify({
+        "message": "All Virtual Sensor Nodes restored to normal baseline.",
+        "status": "NORMAL",
+        "notice": "Virtual Sensor Network — Simulated Prototype Data"
+    })
+
+
+@app.route("/api/vsn/<vsn_id>/analysis", methods=["GET"])
+def get_vsn_analysis(vsn_id):
+    """Returns detailed explainable AI anomaly analysis for a VSN."""
+    vsn_id = vsn_id.upper()
+    item = vsn_memory_store.get(vsn_id, DEFAULT_VSN_DATA[0])
+    analysis = compute_vsn_anomaly(item)
+    return jsonify({
+        "vsn_id": vsn_id,
+        "track_id": item.get("track_id"),
+        "km_position": item.get("km_position"),
+        "telemetry": {
+            "train_speed": item.get("train_speed"),
+            "track_occupancy": item.get("track_occupancy"),
+            "track_condition": item.get("track_condition"),
+            "vibration_level": item.get("vibration_level"),
+            "signal_status": item.get("signal_status")
+        },
+        "ai_detection": analysis,
+        "architecture_note": "Software-defined Virtual Sensor Network prototype. Can be fed by physical SCADA/IoT sensors in production."
+    })
 
 
 # ============================================================
