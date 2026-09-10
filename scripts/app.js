@@ -24,6 +24,8 @@ const APP = {
     activeZone: 'ALL',
     deviationRouteTrackIds: [],   // highlighted deviation path
     deviationTargetStation: null,
+    congestionMode: true,         // Google Maps style traffic & sensor layer
+    selectedTrackForPopup: null,
   },
 };
 
@@ -49,11 +51,7 @@ const SPLASH_STATUSES = [
 ];
 
 function initSplash() {
-  const canvas = document.getElementById('splash-particles');
-  if (canvas) initSplashParticles(canvas);
-
   buildSleepers();
-  startSmokeEffect();
 
   const fill = document.getElementById('splash-progress-fill');
   const pctEl = document.getElementById('splash-pct');
@@ -64,19 +62,19 @@ function initSplash() {
   const statusInterval = setInterval(() => {
     statusIdx = Math.min(statusIdx + 1, SPLASH_STATUSES.length - 1);
     if (statusEl) statusEl.textContent = SPLASH_STATUSES[statusIdx];
-  }, 420);
+  }, 280);
 
   const progressInterval = setInterval(() => {
-    const increment = pct < 60 ? 3 : pct < 85 ? 1.5 : 0.8;
+    const increment = pct < 60 ? 5 : pct < 85 ? 3 : 2;
     pct = Math.min(pct + increment, 100);
     if (fill) fill.style.width = pct + '%';
     if (pctEl) pctEl.textContent = Math.round(pct) + '%';
     if (pct >= 100) {
       clearInterval(progressInterval);
       clearInterval(statusInterval);
-      setTimeout(hideSplash, 500);
+      setTimeout(hideSplash, 350);
     }
-  }, 40);
+  }, 30);
 }
 
 function buildSleepers() {
@@ -86,73 +84,9 @@ function buildSleepers() {
   for (let i = 0; i < count; i++) {
     const s = document.createElement('div');
     s.className = 'splash-sleeper';
-    s.style.animationDelay = (i * 0.05) + 's';
+    s.style.animationDelay = (i * 0.03) + 's';
     row.appendChild(s);
   }
-}
-
-function startSmokeEffect() {
-  const container = document.getElementById('st-smoke');
-  if (!container) return;
-  setInterval(() => {
-    const puff = document.createElement('div');
-    puff.className = 'smoke-puff';
-    puff.style.left = (Math.random() * 10 - 5) + 'px';
-    container.appendChild(puff);
-    setTimeout(() => puff.remove(), 1200);
-  }, 200);
-}
-
-// Splash Particles (electric sparks near train wheels)
-function initSplashParticles(canvas) {
-  const ctx = canvas.getContext('2d');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-
-  const particles = [];
-
-  function spawnParticle() {
-    // Train position: roughly bottom 42% of screen height, moves from left to right
-    const trainBottomY = window.innerHeight * 0.58;
-    // only spawn during train animation (first 5s)
-    particles.push({
-      x: window.innerWidth * 0.3 + Math.random() * 100,
-      y: trainBottomY,
-      vx: (Math.random() - 0.5) * 3,
-      vy: -(Math.random() * 3 + 1),
-      life: 1,
-      size: Math.random() * 3 + 1,
-      hue: 200 + Math.random() * 40,
-    });
-  }
-
-  let startTime = Date.now();
-  const spawnHandle = setInterval(() => {
-    if (Date.now() - startTime > 5000) { clearInterval(spawnHandle); return; }
-    for (let i = 0; i < 3; i++) spawnParticle();
-  }, 60);
-
-  function loop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for (let i = particles.length - 1; i >= 0; i--) {
-      const p = particles[i];
-      p.x += p.vx; p.y += p.vy;
-      p.vy += 0.08; // gravity
-      p.life -= 0.025;
-      if (p.life <= 0) { particles.splice(i, 1); continue; }
-      ctx.save();
-      ctx.globalAlpha = p.life;
-      ctx.fillStyle = `hsl(${p.hue}, 100%, 70%)`;
-      ctx.shadowColor = `hsl(${p.hue}, 100%, 70%)`;
-      ctx.shadowBlur = 6;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
-    requestAnimationFrame(loop);
-  }
-  loop();
 }
 
 function hideSplash() {
@@ -438,6 +372,7 @@ function switchTab(tab) {
   if (tab === 'my-queries') renderMyQueries();
   if (tab === 'repair-jobs') renderRepairJobs();
   if (tab === 'my-route') renderMyRoute();
+  if (tab === 'block-planning') initBlockPlanning();
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -448,6 +383,112 @@ function switchTab(tab) {
 let canvas, ctx, animFrame;
 let stationLookup = {};
 let trackHitboxes = [];
+let sensorHitboxes = [];
+let repairHitboxes = [];
+
+// ============================================================
+// VIRTUAL SENSOR NETWORK (VSN) & TRACK REPAIRS STORE
+// ============================================================
+const STORAGE_KEY_REPAIRS = 'trainsync_repairs_v2';
+
+const DEFAULT_REPAIRS = [
+  {
+    id: 'REP-001',
+    trackId: 'TRK005',
+    km: 18.5,
+    type: 'Deep Screening & Ballast Tamping',
+    tsr: 30,
+    vibration: 3.8,
+    temp: 46.2,
+    defect: 9.4,
+    crew: 'Northern Railway Track Gang #4',
+    hours: 6,
+    notes: 'Ballast consolidation & tamping between Km 18 and 20. TSR 30 km/h in force.',
+    status: 'active',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'REP-002',
+    trackId: 'TRK001',
+    km: 1.2,
+    type: 'Rail Fracture & Weld Replacement',
+    tsr: 0,
+    vibration: 5.4,
+    temp: 52.1,
+    defect: 15.8,
+    crew: 'SSE P-Way Emergency Flying Squad',
+    hours: 4,
+    notes: 'Micro-fracture detected by ultrasonic USFD trolley on Down Track ML. Full track block.',
+    status: 'active',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'REP-003',
+    trackId: 'TRK017',
+    km: 12.0,
+    type: 'Overhead Equipment (OHE) Mast Repair',
+    tsr: 45,
+    vibration: 2.9,
+    temp: 44.0,
+    defect: 6.2,
+    crew: 'TRD Section Maintenance Unit #2',
+    hours: 3,
+    notes: 'Cantilever dropper adjustment & contact wire tensioning.',
+    status: 'active',
+    createdAt: new Date().toISOString()
+  }
+];
+
+function loadRepairs() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_REPAIRS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEY_REPAIRS, JSON.stringify(DEFAULT_REPAIRS));
+      return [...DEFAULT_REPAIRS];
+    }
+    return JSON.parse(raw);
+  } catch (e) {
+    return [...DEFAULT_REPAIRS];
+  }
+}
+
+function saveRepairs(repairs) {
+  try {
+    localStorage.setItem(STORAGE_KEY_REPAIRS, JSON.stringify(repairs));
+  } catch (e) {}
+}
+
+function getTrackRepairs(trackId) {
+  return loadRepairs().filter(r => r.trackId === trackId && r.status === 'active');
+}
+
+// Generate virtual sensors along track corridors
+function getTrackSensors(track) {
+  const distance = track.distance || 50;
+  const hash = (track.id.charCodeAt(0) * 17 + (track.id.charCodeAt(track.id.length - 1) || 0) * 31) % 100;
+  const baseVib = 1.6 + (hash % 20) / 10;
+  const baseTemp = 38 + (hash % 14);
+  const baseHealth = 88 - (hash % 25);
+
+  return [
+    {
+      id: `VSN-${track.id}-A`,
+      t: 0.32,
+      km: +(distance * 0.32).toFixed(1),
+      vibration: +(baseVib + 0.3).toFixed(1),
+      temp: +(baseTemp + 1.2).toFixed(1),
+      health: Math.max(50, baseHealth - 5),
+    },
+    {
+      id: `VSN-${track.id}-B`,
+      t: 0.68,
+      km: +(distance * 0.68).toFixed(1),
+      vibration: +(baseVib - 0.2).toFixed(1),
+      temp: +(baseTemp - 0.8).toFixed(1),
+      health: Math.min(99, baseHealth + 8),
+    }
+  ];
+}
 
 // Control points for bezier curves on key long routes
 const TRACK_CURVES = {
@@ -515,6 +556,8 @@ function drawMap() {
 
   // 4. Draw the rail network
   trackHitboxes = [];
+  sensorHitboxes = [];
+  repairHitboxes = [];
   const zone = APP.mapState.activeZone;
 
   RAILWAY_DATABASE.tracks.forEach(track => {
@@ -618,7 +661,22 @@ function drawIndiaOutline() {
   ctx.restore();
 }
 
-// ─── Draw Double-Rail Track ─────────────────────────────────
+// Helper: Parametric coordinate along track bezier or straight line
+function getTrackPointAtT(t, x1, y1, x2, y2, cpx, cpy, isBezier) {
+  if (isBezier) {
+    const mt = 1 - t;
+    return {
+      x: mt * mt * x1 + 2 * mt * t * cpx + t * t * x2,
+      y: mt * mt * y1 + 2 * mt * t * cpy + t * t * y2
+    };
+  }
+  return {
+    x: x1 + (x2 - x1) * t,
+    y: y1 + (y2 - y1) * t
+  };
+}
+
+// ─── Draw Double-Rail Track (with Google Maps Traffic & Sensors) ──
 function drawRailTrack(from, to, track, isHovered) {
   const displayStatus = getTrackDisplayStatus(track);
   const isBlocked = displayStatus === 'blocked';
@@ -633,37 +691,47 @@ function drawRailTrack(from, to, track, isHovered) {
   const cpy = curve ? curve.cpy : (y1 + y2) / 2;
   const isBezier = !!curve;
 
+  const repairs = getTrackRepairs(track.id);
+  const hasSevereRepair = repairs.some(r => r.tsr === 0);
+  const hasCautionRepair = repairs.some(r => r.tsr > 0 && r.tsr <= 50);
+
   ctx.save();
 
   // Glow shadow
-  if (isBlocked) {
-    ctx.shadowColor = 'rgba(239,68,68,0.5)';
-    ctx.shadowBlur = isHovered ? 22 : 12;
+  if (isBlocked || hasSevereRepair) {
+    ctx.shadowColor = 'rgba(239,68,68,0.6)';
+    ctx.shadowBlur = isHovered ? 24 : 14;
   } else if (isDeviated) {
     ctx.shadowColor = 'rgba(249,115,22,0.7)';
     ctx.shadowBlur = isHovered ? 24 : 16;
+  } else if (hasCautionRepair) {
+    ctx.shadowColor = 'rgba(245,158,11,0.6)';
+    ctx.shadowBlur = isHovered ? 20 : 10;
   } else if (isCompleted) {
     ctx.shadowColor = 'rgba(37,99,235,0.5)';
     ctx.shadowBlur = isHovered ? 18 : 8;
   } else if (isHovered) {
-    ctx.shadowColor = 'rgba(16,185,129,0.6)';
-    ctx.shadowBlur = 16;
+    ctx.shadowColor = 'rgba(16,185,129,0.7)';
+    ctx.shadowBlur = 18;
   }
 
-  // Determine color
+  // Determine color (Google Maps Traffic Congestion scheme)
   let railColor, ballastColor;
-  if (isBlocked) {
+  if (isBlocked || hasSevereRepair) {
     railColor = isHovered ? '#dc2626' : '#ef4444';
-    ballastColor = 'rgba(239,68,68,0.15)';
+    ballastColor = 'rgba(239,68,68,0.22)';
   } else if (isDeviated) {
     railColor = '#f97316';
     ballastColor = 'rgba(249,115,22,0.2)';
+  } else if (hasCautionRepair) {
+    railColor = isHovered ? '#d97706' : '#f59e0b';
+    ballastColor = 'rgba(245,158,11,0.22)';
   } else if (isCompleted) {
     railColor = isHovered ? '#1d4ed8' : '#3b82f6';
     ballastColor = 'rgba(59,130,246,0.15)';
   } else {
-    railColor = isHovered ? '#4ade80' : (APP.mapState.scale > 1.5 ? '#6ee7b7' : '#10b981');
-    ballastColor = 'rgba(16,185,129,0.1)';
+    railColor = isHovered ? '#34d399' : (APP.mapState.scale > 1.5 ? '#6ee7b7' : '#10b981');
+    ballastColor = 'rgba(16,185,129,0.14)';
   }
 
   // Get line angle for offset
@@ -682,14 +750,15 @@ function drawRailTrack(from, to, track, isHovered) {
   ctx.stroke();
 
   // Draw sleepers if zoomed in
-  if (APP.mapState.scale > 1.2 && !isBlocked) {
+  if (APP.mapState.scale > 1.2 && !isBlocked && !hasSevereRepair) {
     drawDoubleRailSleepers(x1, y1, x2, y2, cpx, cpy, isBezier, railColor);
   }
 
   // Rail 1 (left)
   ctx.beginPath();
   tracePath(ctx, x1 + nx * railGap, y1 + ny * railGap, x2 + nx * railGap, y2 + ny * railGap, cpx + nx * railGap, cpy + ny * railGap, isBezier);
-  if (isBlocked) ctx.setLineDash([10, 6]);
+  if (isBlocked || hasSevereRepair) ctx.setLineDash([10, 6]);
+  else if (hasCautionRepair) ctx.setLineDash([16, 4]);
   else ctx.setLineDash([]);
   ctx.strokeStyle = railColor;
   ctx.lineWidth = isHovered ? 2.5 : 2;
@@ -705,8 +774,8 @@ function drawRailTrack(from, to, track, isHovered) {
   // Deviation animated arrows
   if (isDeviated) drawDeviationArrows(x1, y1, x2, y2, cpx, cpy, isBezier);
 
-  // Blocked pulsing midpoint indicator
-  if (isBlocked) drawBlockedIndicator(x1, y1, x2, y2);
+  // Blocked pulsing midpoint indicator (if no explicit repair pin)
+  if (isBlocked && repairs.length === 0) drawBlockedIndicator(x1, y1, x2, y2);
 
   // Completed tick
   if (isCompleted) {
@@ -719,6 +788,83 @@ function drawRailTrack(from, to, track, isHovered) {
   }
 
   ctx.restore();
+
+  // ─── Virtual Sensor Nodes & Repair Worksite Markers ────────
+  if (APP.mapState.congestionMode) {
+    // 1. Virtual Sensors
+    const sensors = getTrackSensors(track);
+    sensors.forEach(s => {
+      const pt = getTrackPointAtT(s.t, x1, y1, x2, y2, cpx, cpy, isBezier);
+      sensorHitboxes.push({ sensor: s, x: pt.x, y: pt.y, radius: 8, track });
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#0f172a';
+      ctx.fill();
+      ctx.strokeStyle = s.health < 65 ? '#ef4444' : '#38bdf8';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 2, 0, Math.PI * 2);
+      ctx.fillStyle = s.health < 65 ? '#ef4444' : '#38bdf8';
+      ctx.fill();
+
+      if (APP.mapState.scale >= 1.3) {
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '700 8px Rajdhani, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`VSN ${s.km}k`, pt.x, pt.y - 7);
+      }
+      ctx.restore();
+    });
+
+    // 2. Active Repairs (Exact KM Chainage Pinpoints)
+    repairs.forEach(r => {
+      const t = Math.max(0.08, Math.min(0.92, (r.km || 10) / (track.distance || 50)));
+      const pt = getTrackPointAtT(t, x1, y1, x2, y2, cpx, cpy, isBezier);
+      repairHitboxes.push({ repair: r, x: pt.x, y: pt.y, radius: 14, track });
+
+      ctx.save();
+      const pulseTime = Date.now() / 320;
+      const pulseRadius = 10 + Math.sin(pulseTime) * 3;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, pulseRadius, 0, Math.PI * 2);
+      ctx.fillStyle = r.tsr === 0 ? 'rgba(239,68,68,0.25)' : 'rgba(245,158,11,0.25)';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 7.5, 0, Math.PI * 2);
+      ctx.fillStyle = r.tsr === 0 ? '#dc2626' : '#d97706';
+      ctx.shadowColor = r.tsr === 0 ? '#ef4444' : '#f59e0b';
+      ctx.shadowBlur = 8;
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 8px Inter';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowBlur = 0;
+      ctx.fillText(r.tsr === 0 ? '⛔' : '⚠', pt.x, pt.y);
+
+      // KM Badge Pill
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(pt.x - 22, pt.y + 9, 44, 13);
+      ctx.strokeStyle = r.tsr === 0 ? '#ef4444' : '#f59e0b';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(pt.x - 22, pt.y + 9, 44, 13);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '700 8px Rajdhani, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`KM ${r.km}`, pt.x, pt.y + 15);
+      ctx.restore();
+    });
+  }
 }
 
 function tracePath(ctx, x1, y1, x2, y2, cpx, cpy, isBezier) {
@@ -935,15 +1081,33 @@ function onMouseMove(e) {
     return;
   }
 
-  let hoveredS = null, hoveredT = null;
+  let hoveredS = null, hoveredT = null, hoveredR = null, hoveredSensor = null;
 
-  for (const s of RAILWAY_DATABASE.stations) {
-    const dx = wx - s.x, dy = wy - s.y;
-    const r = (s.type === 'terminal' ? 14 : 9);
-    if (Math.sqrt(dx*dx + dy*dy) < r) { hoveredS = s.id; break; }
+  // Check repair beacons
+  for (const rh of repairHitboxes) {
+    if (Math.hypot(wx - rh.x, wy - rh.y) < rh.radius) {
+      hoveredR = rh; break;
+    }
   }
 
-  if (!hoveredS) {
+  // Check virtual sensors
+  if (!hoveredR) {
+    for (const sh of sensorHitboxes) {
+      if (Math.hypot(wx - sh.x, wy - sh.y) < sh.radius) {
+        hoveredSensor = sh; break;
+      }
+    }
+  }
+
+  if (!hoveredR && !hoveredSensor) {
+    for (const s of RAILWAY_DATABASE.stations) {
+      const dx = wx - s.x, dy = wy - s.y;
+      const r = (s.type === 'terminal' ? 14 : 9);
+      if (Math.sqrt(dx*dx + dy*dy) < r) { hoveredS = s.id; break; }
+    }
+  }
+
+  if (!hoveredR && !hoveredSensor && !hoveredS) {
     for (const h of trackHitboxes) {
       if (pointNearLine(wx, wy, h.x1, h.y1, h.x2, h.y2, 6)) {
         hoveredT = h.track.id; break;
@@ -953,7 +1117,7 @@ function onMouseMove(e) {
 
   APP.mapState.hoveredStation = hoveredS;
   APP.mapState.hoveredTrack = hoveredT;
-  canvas.style.cursor = (hoveredS || hoveredT) ? 'pointer' : 'grab';
+  canvas.style.cursor = (hoveredS || hoveredT || hoveredR || hoveredSensor) ? 'pointer' : 'grab';
 }
 
 function onMouseUp() { APP.mapState.isDragging = false; canvas.style.cursor = 'grab'; }
@@ -979,6 +1143,23 @@ function onWheel(e) {
 function onCanvasClick(e) {
   const { cx, cy, wx, wy } = getWorldCoords(e);
 
+  // 1. Check Active Repairs
+  for (const rh of repairHitboxes) {
+    if (Math.hypot(wx - rh.x, wy - rh.y) < rh.radius * 1.6) {
+      showRepairTelemetryPopup(rh.repair, rh.track, cx, cy);
+      return;
+    }
+  }
+
+  // 2. Check Virtual Sensors
+  for (const sh of sensorHitboxes) {
+    if (Math.hypot(wx - sh.x, wy - sh.y) < sh.radius * 1.6) {
+      showSensorTelemetryPopup(sh.sensor, sh.track, cx, cy);
+      return;
+    }
+  }
+
+  // 3. Check Stations
   for (const station of RAILWAY_DATABASE.stations) {
     const dx = wx - station.x, dy = wy - station.y;
     const r = station.type === 'terminal' ? 16 : 10;
@@ -987,13 +1168,14 @@ function onCanvasClick(e) {
     }
   }
 
+  // 4. Check Tracks
   for (const h of trackHitboxes) {
     if (pointNearLine(wx, wy, h.x1, h.y1, h.x2, h.y2, 8)) {
       showTrackPopup(h.track, cx, cy); return;
     }
   }
 
-  closePopup(); closeTrackPopup();
+  closePopup(); closeTrackPopup(); closeSensorPopup();
 }
 
 function pointNearLine(px, py, x1, y1, x2, y2, threshold) {
@@ -1036,27 +1218,84 @@ function showStationPopup(station, cx, cy) {
 // ─────────────────────────────────────────────────────────────
 function showTrackPopup(track, cx, cy) {
   closePopup();
+  closeSensorPopup();
+  APP.mapState.selectedTrackForPopup = track;
   const popup = document.getElementById('track-popup');
   const from = stationLookup[track.from];
   const to = stationLookup[track.to];
 
-  const icon = track.status === 'blocked' ? '🔴' : '🟢';
+  const displayStatus = getTrackDisplayStatus(track);
+  const isBlocked = displayStatus === 'blocked';
+  const icon = isBlocked ? '🔴' : '🟢';
   document.getElementById('track-popup-icon').textContent = icon;
   document.getElementById('track-popup-route').textContent = `${from?.name || track.from} → ${to?.name || track.to}`;
-  document.getElementById('track-popup-dist').textContent = `Distance: ${track.distance} km`;
+  document.getElementById('track-popup-dist').textContent = `Total Length: ${track.distance} km`;
 
   const statusEl = document.getElementById('track-popup-status');
-  statusEl.textContent = track.status === 'blocked' ? '⛔ Blocked' : '✅ Operational';
-  statusEl.className = 'track-status-badge ' + (track.status === 'blocked' ? 'blocked' : 'operational');
+  statusEl.textContent = isBlocked ? '⛔ Blocked / Repair' : '✅ Operational';
+  statusEl.className = 'track-status-badge ' + (isBlocked ? 'blocked' : 'operational');
 
   const reasonEl = document.getElementById('track-popup-reason');
   if (track.reason) { reasonEl.textContent = '⚠ ' + track.reason; reasonEl.classList.remove('hidden'); }
   else { reasonEl.classList.add('hidden'); }
 
+  // Virtual Sensors Telemetry Snapshot
+  const sensors = getTrackSensors(track);
+  const avgVib = (sensors.reduce((acc, s) => acc + s.vibration, 0) / sensors.length).toFixed(1);
+  const avgTemp = (sensors.reduce((acc, s) => acc + s.temp, 0) / sensors.length).toFixed(1);
+  const healthScore = Math.round(sensors.reduce((acc, s) => acc + s.health, 0) / sensors.length);
+
+  const sensorsEl = document.getElementById('track-popup-sensors');
+  if (sensorsEl) {
+    sensorsEl.innerHTML = `
+      <div class="tp-sensor-chip">
+        <span class="tp-sensor-val ${avgVib > 4.0 ? 'danger' : avgVib > 2.5 ? 'warn' : ''}">${avgVib} g</span>
+        <span class="tp-sensor-lbl">Oscillation</span>
+      </div>
+      <div class="tp-sensor-chip">
+        <span class="tp-sensor-val ${avgTemp > 50 ? 'danger' : avgTemp > 42 ? 'warn' : ''}">${avgTemp}°C</span>
+        <span class="tp-sensor-lbl">Rail Temp</span>
+      </div>
+      <div class="tp-sensor-chip">
+        <span class="tp-sensor-val ${healthScore < 60 ? 'danger' : healthScore < 80 ? 'warn' : ''}">${healthScore}%</span>
+        <span class="tp-sensor-lbl">VSN Health</span>
+      </div>
+    `;
+  }
+
+  // Active Repairs on this track corridor
+  const repairs = getTrackRepairs(track.id);
+  const repairsEl = document.getElementById('track-popup-repairs');
+  if (repairsEl) {
+    if (repairs.length > 0) {
+      repairsEl.innerHTML = `
+        <div style="font-size:11px;font-weight:700;color:#dc2626;margin:4px 0;">📍 Active Worksites on this Corridor (${repairs.length}):</div>
+        ` + repairs.map(r => `
+          <div class="tp-repair-card">
+            <div class="tpr-hdr">
+              <span>${r.type}</span>
+              <span class="tpr-km">KM ${r.km}</span>
+            </div>
+            <div class="tpr-desc">${r.notes || 'Maintenance gang deployed'} (TSR: ${r.tsr} km/h)</div>
+            <div class="tpr-foot">
+              <span>Crew: ${r.crew || 'P-Way Gang'}</span>
+              <button class="tpr-clear-btn" onclick="clearRepair('${r.id}')">✓ Clear</button>
+            </div>
+          </div>
+        `).join('');
+    } else {
+      repairsEl.innerHTML = `
+        <div style="font-size:11px;color:#059669;background:rgba(16,185,129,0.08);padding:6px;border-radius:6px;border:1px solid rgba(16,185,129,0.2);margin:4px 0;">
+          🟢 All clear along this ${track.distance} km corridor. Normal line speed.
+        </div>
+      `;
+    }
+  }
+
   // SM-only deviate button
   const deviateArea = document.getElementById('track-popup-deviate-area');
   if (deviateArea) {
-    if (track.status === 'blocked' && APP.currentUser?.role === 'station_master') {
+    if (isBlocked && APP.currentUser?.role === 'station_master') {
       deviateArea.innerHTML = `
         <button class="deviate-train-btn" onclick="openDeviationModal('${track.id}')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
@@ -1072,6 +1311,282 @@ function showTrackPopup(track, cx, cy) {
 
   positionPopup(popup, cx, cy);
   popup.classList.remove('hidden');
+}
+
+function handleTrackPopupQuery() {
+  const track = APP.mapState.selectedTrackForPopup;
+  closeTrackPopup();
+  if (track) openQueryModal(track.id);
+  else openQueryModal();
+}
+
+function handleTrackPopupRepair() {
+  const track = APP.mapState.selectedTrackForPopup;
+  closeTrackPopup();
+  if (track) openAddRepairModal(track.id);
+  else openAddRepairModal();
+}
+
+function showSensorTelemetryPopup(sensor, track, cx, cy) {
+  closePopup(); closeTrackPopup();
+  const popup = document.getElementById('sensor-telemetry-popup');
+  const badge = document.getElementById('sensor-popup-badge');
+  badge.textContent = `📡 VIRTUAL SENSOR: ${sensor.id}`;
+  badge.className = 'sensor-popup-badge';
+
+  const body = document.getElementById('sensor-popup-body');
+  const from = stationLookup[track.from]?.name || track.from;
+  const to = stationLookup[track.to]?.name || track.to;
+
+  body.innerHTML = `
+    <div class="sensor-hud-title">${track.id}: ${from} → ${to}</div>
+    <div class="sensor-hud-sub">Location: <strong>KM ${sensor.km}</strong> of ${track.distance} km corridor • 10 Hz Telemetry</div>
+    <div class="sensor-hud-grid">
+      <div class="shg-item">
+        <span class="shg-val" style="color:${sensor.vibration > 4.0 ? '#ef4444' : sensor.vibration > 2.5 ? '#f59e0b' : '#38bdf8'};">${sensor.vibration} g</span>
+        <span class="shg-lbl">Oscillation</span>
+      </div>
+      <div class="shg-item">
+        <span class="shg-val" style="color:${sensor.temp > 50 ? '#ef4444' : '#38bdf8'};">${sensor.temp}°C</span>
+        <span class="shg-lbl">Rail Temp</span>
+      </div>
+      <div class="shg-item">
+        <span class="shg-val" style="color:${sensor.health < 65 ? '#ef4444' : '#10b981'};">${sensor.health}%</span>
+        <span class="shg-lbl">Health</span>
+      </div>
+    </div>
+    <div class="sensor-hud-tsr">
+      🚦 Line Traffic Status: <strong>${sensor.health > 80 ? 'Normal Free Flow (130 km/h)' : 'Speed Monitored / Moderate Wear'}</strong>
+    </div>
+    <div class="sensor-hud-actions">
+      <button class="sensor-hud-btn primary" onclick="closeSensorPopup(); openQueryModal('${track.id}');">
+        ⚡ Raise Query on Track
+      </button>
+      <button class="sensor-hud-btn danger" onclick="closeSensorPopup(); openAddRepairModal('${track.id}', ${sensor.km});">
+        📍 Add Worksite Here
+      </button>
+    </div>
+  `;
+
+  positionPopup(popup, cx, cy);
+  popup.classList.remove('hidden');
+}
+
+function showRepairTelemetryPopup(repair, track, cx, cy) {
+  closePopup(); closeTrackPopup();
+  const popup = document.getElementById('sensor-telemetry-popup');
+  const badge = document.getElementById('sensor-popup-badge');
+  badge.textContent = `⚠ ACTIVE WORKSITE: ${repair.id}`;
+  badge.className = 'sensor-popup-badge repair-site';
+
+  const body = document.getElementById('sensor-popup-body');
+  const from = stationLookup[track.from]?.name || track.from;
+  const to = stationLookup[track.to]?.name || track.to;
+
+  body.innerHTML = `
+    <div class="sensor-hud-title">${repair.type}</div>
+    <div class="sensor-hud-sub">${track.id}: ${from} → ${to} @ <strong>KM ${repair.km}</strong> (Chainage)</div>
+    <div class="sensor-hud-grid">
+      <div class="shg-item">
+        <span class="shg-val" style="color:#ef4444;">${repair.tsr} km/h</span>
+        <span class="shg-lbl">TSR Speed</span>
+      </div>
+      <div class="shg-item">
+        <span class="shg-val">${repair.vibration || 4.8} g</span>
+        <span class="shg-lbl">Vibration</span>
+      </div>
+      <div class="shg-item">
+        <span class="shg-val">${repair.temp || 46}°C</span>
+        <span class="shg-lbl">Rail Temp</span>
+      </div>
+    </div>
+    <div class="sensor-hud-tsr" style="background:rgba(220,38,38,0.15);border-color:rgba(220,38,38,0.3);color:#fca5a5;">
+      🛠 Worksite: ${repair.notes || 'Track repair underway'} • Assigned: ${repair.crew || 'P-Way Gang'}
+    </div>
+    <div class="sensor-hud-actions">
+      <button class="sensor-hud-btn primary" onclick="closeSensorPopup(); openQueryModal('${track.id}');">
+        ⚡ Raise Incident Query
+      </button>
+      <button class="sensor-hud-btn" style="background:#059669;color:white;" onclick="clearRepair('${repair.id}'); closeSensorPopup();">
+        ✅ Clear &amp; Restore Speed
+      </button>
+    </div>
+  `;
+
+  positionPopup(popup, cx, cy);
+  popup.classList.remove('hidden');
+}
+
+function closeSensorPopup() {
+  const popup = document.getElementById('sensor-telemetry-popup');
+  if (popup) popup.classList.add('hidden');
+}
+
+// ─── ADD REPAIR MODAL HANDLERS ───────────────────────────────
+function openAddRepairModal(preselectedTrackId, defaultKm) {
+  const sel = document.getElementById('rf-track');
+  if (!sel) return;
+  const allTracks = [...RAILWAY_DATABASE.tracks].sort((a, b) => a.id.localeCompare(b.id));
+  sel.innerHTML = '<option value="">-- Choose Track Corridor --</option>' +
+    allTracks.map(t => {
+      const from = stationLookup[t.from]?.name || t.from;
+      const to = stationLookup[t.to]?.name || t.to;
+      return `<option value="${t.id}" ${t.id === preselectedTrackId ? 'selected' : ''}>${t.id}: ${from} → ${to} (${t.distance} km)</option>`;
+    }).join('');
+
+  if (preselectedTrackId) sel.value = preselectedTrackId;
+  else if (!sel.value && allTracks.length > 0) sel.value = allTracks[0].id;
+
+  onRepairTrackSelectChange();
+
+  if (defaultKm !== undefined) {
+    syncKmInput(defaultKm);
+    syncKmSlider(defaultKm);
+  }
+
+  document.getElementById('repair-modal-overlay').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAddRepairModal(e) {
+  if (e && e.target !== document.getElementById('repair-modal-overlay')) return;
+  document.getElementById('repair-modal-overlay').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+function onRepairTrackSelectChange() {
+  const trackId = document.getElementById('rf-track').value;
+  const track = RAILWAY_DATABASE.tracks.find(t => t.id === trackId);
+  const totalLen = track ? track.distance : 100;
+  const totalEl = document.getElementById('rf-total-len');
+  if (totalEl) totalEl.value = `${totalLen} km`;
+
+  const slider = document.getElementById('rf-km-slider');
+  if (slider) {
+    slider.max = totalLen;
+    const def = (totalLen * 0.4).toFixed(1);
+    slider.value = def;
+    syncKmInput(def);
+  }
+}
+
+function syncKmInput(val) {
+  const num = parseFloat(val) || 0;
+  const numberInput = document.getElementById('rf-km-number');
+  const badge = document.getElementById('rf-km-badge');
+  if (numberInput) numberInput.value = num;
+  if (badge) badge.textContent = `KM ${num.toFixed(1)}`;
+}
+
+function syncKmSlider(val) {
+  const num = parseFloat(val) || 0;
+  const slider = document.getElementById('rf-km-slider');
+  const badge = document.getElementById('rf-km-badge');
+  if (slider) slider.value = num;
+  if (badge) badge.textContent = `KM ${num.toFixed(1)}`;
+}
+
+function submitAddRepair(event) {
+  event.preventDefault();
+  const trackId = document.getElementById('rf-track').value;
+  const km = parseFloat(document.getElementById('rf-km-number').value) || 10;
+  const type = document.getElementById('rf-type').value;
+  const tsr = parseInt(document.getElementById('rf-tsr').value) || 0;
+  const vibration = parseFloat(document.getElementById('rf-vibration').value) || 4.5;
+  const temp = parseFloat(document.getElementById('rf-temp').value) || 48;
+  const defect = parseFloat(document.getElementById('rf-defect').value) || 12;
+  const crew = document.getElementById('rf-crew').value || 'P-Way Gang';
+  const hours = parseInt(document.getElementById('rf-hours').value) || 4;
+  const notes = document.getElementById('rf-notes').value.trim();
+
+  const repairs = loadRepairs();
+  const newRepair = {
+    id: 'REP-' + Date.now().toString().slice(-5),
+    trackId,
+    km,
+    type,
+    tsr,
+    vibration,
+    temp,
+    defect,
+    crew,
+    hours,
+    notes,
+    createdAt: new Date().toISOString(),
+    status: 'active'
+  };
+  repairs.push(newRepair);
+  saveRepairs(repairs);
+
+  // If 0 km/h block, reflect on track status
+  const track = RAILWAY_DATABASE.tracks.find(t => t.id === trackId);
+  if (track && tsr === 0) {
+    track.status = 'blocked';
+    track.reason = `${type} at KM ${km}`;
+  }
+
+  closeAddRepairModal();
+  showToast(`📍 Worksite pinned at KM ${km} on ${trackId}! Traffic congestion updated.`, 'success');
+
+  // Trigger alert in network alerts
+  RAILWAY_DATABASE.alerts.unshift({
+    id: 'ALT-' + Date.now().toString().slice(-4),
+    track: trackId,
+    type: tsr === 0 ? 'critical' : 'warning',
+    time: new Date().toISOString(),
+    message: `${type} detected at KM ${km}. Speed restriction ${tsr} km/h imposed by ${crew}.`,
+    zone: stationLookup[track?.from]?.zone || 'NR'
+  });
+
+  if (APP.currentTab === 'tracks') renderTracksGrid();
+  if (APP.currentTab === 'alerts') renderAlerts();
+  updateNetworkStats();
+}
+
+function clearRepair(repairId) {
+  let repairs = loadRepairs();
+  const target = repairs.find(r => r.id === repairId);
+  repairs = repairs.filter(r => r.id !== repairId);
+  saveRepairs(repairs);
+
+  if (target) {
+    const remaining = repairs.filter(r => r.trackId === target.trackId);
+    if (remaining.length === 0) {
+      const track = RAILWAY_DATABASE.tracks.find(t => t.id === target.trackId);
+      if (track && track.status === 'blocked') {
+        track.status = 'operational';
+        track.reason = '';
+      }
+    }
+    showToast(`✅ Worksite cleared! Normal line speed restored at KM ${target.km}.`, 'success');
+  }
+
+  closeTrackPopup();
+  closeSensorPopup();
+  if (APP.currentTab === 'tracks') renderTracksGrid();
+  updateNetworkStats();
+}
+
+function toggleCongestionMode() {
+  APP.mapState.congestionMode = !APP.mapState.congestionMode;
+  const btn = document.getElementById('btn-toggle-congestion');
+  if (btn) {
+    if (APP.mapState.congestionMode) {
+      btn.classList.add('active');
+      btn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        🚦 Traffic Congestion &amp; Sensors
+      `;
+      showToast('🚦 Google Maps Traffic Congestion & Virtual Sensors: ACTIVE', 'info');
+    } else {
+      btn.classList.remove('active');
+      btn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        🚦 Standard Track View
+      `;
+      showToast('Standard Railway Map View Active', 'info');
+    }
+  }
 }
 
 function positionPopup(popup, cx, cy) {
@@ -1122,14 +1637,27 @@ function renderTracksGrid() {
     const statusClass = isCompleted ? 'operational' : (isBlocked ? 'blocked' : 'operational');
     const statusLabel = isCompleted ? '✅ Repaired' : (isBlocked ? '⛔ Blocked' : '✅ Operational');
 
-    const raiseBtn = (isSM && isBlocked && !isCompleted) ? `
-      <button class="raise-query-btn" onclick="openQueryModal('${track.id}')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        ${existingQuery ? '📋 Query Raised (' + STATUS_LABELS_SHORT[existingQuery.status] + ')' : 'Raise Repair Query'}
-      </button>` : '';
+    const trackRepairs = getTrackRepairs(track.id);
+    const repairBadge = trackRepairs.length > 0 ? `
+      <div style="font-size:11px;color:#dc2626;background:rgba(220,38,38,0.08);padding:5px 8px;border-radius:6px;margin-top:6px;border:1px solid rgba(220,38,38,0.25);display:flex;justify-content:space-between;align-items:center;">
+        <span>⚠ ${trackRepairs.length} Worksite(s) Active</span>
+        <span style="font-weight:700;">${trackRepairs.map(r => 'KM ' + r.km).join(', ')}</span>
+      </div>` : '';
+
+    const raiseBtn = `
+      <button class="raise-query-btn" onclick="openQueryModal('${track.id}')" title="Raise dynamic incident or repair query on this corridor">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        ${existingQuery ? '📋 Query Active (' + (STATUS_LABELS_SHORT[existingQuery.status] || existingQuery.status) + ')' : '⚡ Raise Query / Report'}
+      </button>`;
+
+    const addRepairBtn = `
+      <button class="raise-query-btn" style="background:linear-gradient(135deg,#c2410c,#ea580c);margin-top:6px;" onclick="openAddRepairModal('${track.id}')" title="Pinpoint repair worksite on this corridor">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        📍 Add Repair Spot (KM)
+      </button>`;
 
     const deviateBtn = (isSM && isBlocked && !isCompleted) ? `
-      <button class="raise-query-btn" style="background:linear-gradient(135deg,#c2410c,#ea580c);margin-top:6px" onclick="openDeviationModal('${track.id}')">
+      <button class="raise-query-btn" style="background:linear-gradient(135deg,#7c2d12,#9a3412);margin-top:6px" onclick="openDeviationModal('${track.id}')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
         Issue Deviation Order
       </button>` : '';
@@ -1150,7 +1678,12 @@ function renderTracksGrid() {
           <span>🗺 ${from?.zone || '?'}</span>
         </div>
         ${track.reason && !isCompleted ? `<div class="track-card-reason">⚠ ${track.reason}</div>` : ''}
-        ${raiseBtn}${deviateBtn}
+        ${repairBadge}
+        <div style="margin-top:8px;">
+          ${raiseBtn}
+          ${addRepairBtn}
+          ${deviateBtn}
+        </div>
       </div>`;
   }).join('');
 }
@@ -1536,15 +2069,18 @@ function getTrackDisplayStatus(track) {
 // ─────────────────────────────────────────────────────────────
 function openQueryModal(preselectedTrackId) {
   const sel = document.getElementById('qf-track');
-  const blockedTracks = RAILWAY_DATABASE.tracks.filter(t => t.status === 'blocked');
-  sel.innerHTML = '<option value="">-- Select Track --</option>' +
-    blockedTracks.map(t => {
+  if (!sel) return;
+  const allTracks = [...RAILWAY_DATABASE.tracks].sort((a, b) => a.id.localeCompare(b.id));
+  sel.innerHTML = '<option value="">-- Select Any Track Corridor --</option>' +
+    allTracks.map(t => {
       const from = stationLookup[t.from]?.name || t.from;
       const to   = stationLookup[t.to]?.name   || t.to;
-      return `<option value="${t.id}" ${t.id === preselectedTrackId ? 'selected' : ''}>${t.id}: ${from} → ${to}</option>`;
+      const statusTag = t.status === 'blocked' ? ' [⛔ Blocked]' : ' [🟢 Operational]';
+      return `<option value="${t.id}" ${t.id === preselectedTrackId ? 'selected' : ''}>${t.id}: ${from} → ${to} (${t.distance} km)${statusTag}</option>`;
     }).join('');
 
   if (preselectedTrackId) {
+    sel.value = preselectedTrackId;
     const track = RAILWAY_DATABASE.tracks.find(t => t.id === preselectedTrackId);
     if (track?.reason) document.getElementById('qf-reason').value = track.reason;
   }
@@ -1562,22 +2098,22 @@ function closeQueryModal(e) {
 
 function submitQuery(event) {
   event.preventDefault();
-  const user = APP.currentUser;
-  if (!user) return;
+  const user = APP.currentUser || { id: 'SM001', name: 'Duty Station Master', role: 'station_master' };
 
-  const trackId   = document.getElementById('qf-track').value;
+  const trackId    = document.getElementById('qf-track').value;
   const damageType = document.getElementById('qf-damage-type').value;
-  const reason    = document.getElementById('qf-reason').value.trim();
-  const hours     = parseInt(document.getElementById('qf-hours').value);
-  const priority  = document.getElementById('qf-priority').value;
+  const reason     = document.getElementById('qf-reason').value.trim();
+  const hours      = parseInt(document.getElementById('qf-hours').value) || 24;
+  const priority   = document.getElementById('qf-priority').value;
 
   const track = RAILWAY_DATABASE.tracks.find(t => t.id === trackId);
   const from  = stationLookup[track?.from]?.name || track?.from || '?';
   const to    = stationLookup[track?.to]?.name   || track?.to   || '?';
 
   const queries = loadQueries();
+  const qid = 'Q' + String(Date.now()).slice(-6);
   queries.push({
-    id: 'Q' + String(Date.now()).slice(-6),
+    id: qid,
     trackId, fromStation: from, toStation: to,
     damageType, reason, estimatedHours: hours, priority,
     raisedById: user.id, raisedByName: user.name,
@@ -1588,11 +2124,29 @@ function submitQuery(event) {
   });
   saveQueries(queries);
 
+  // If high priority or severe incident, dynamically mark track status
+  if (track && (priority === 'high' || damageType === 'Rail Fracture' || damageType === 'Bridge Damage' || damageType === 'Track Subsidence')) {
+    track.status = 'blocked';
+    track.reason = `${damageType}: ${reason.slice(0, 70)}`;
+  }
+
+  // Add alert to active alerts list
+  RAILWAY_DATABASE.alerts.unshift({
+    id: 'ALT-' + Date.now().toString().slice(-4),
+    track: trackId,
+    type: priority === 'high' ? 'critical' : 'warning',
+    time: new Date().toISOString(),
+    message: `Incident Query #${qid} on ${trackId} (${from} → ${to}): ${damageType} - ${reason.slice(0, 80)}`,
+    zone: stationLookup[track?.from]?.zone || 'NR'
+  });
+
   closeQueryModal();
-  showToast('✅ Repair query submitted successfully!', 'success');
+  showToast(`✅ Query #${qid} raised successfully for ${trackId} (${from} → ${to})!`, 'success');
   updateQueryBadges();
   if (APP.currentTab === 'tracks') renderTracksGrid();
   if (APP.currentTab === 'my-queries') renderMyQueries();
+  if (APP.currentTab === 'alerts') renderAlerts();
+  updateNetworkStats();
 }
 
 // ─────────────────────────────────────────────────────────────

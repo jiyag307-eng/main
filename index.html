@@ -24,29 +24,7 @@
     <div class="splash-sleepers-row" id="splash-sleepers"></div>
   </div>
 
-  <!-- Particle sparks canvas -->
-  <canvas id="splash-particles" class="splash-particles-canvas"></canvas>
-
-  <!-- Animated Train -->
-  <div class="splash-train-wrapper" id="splash-train">
-    <div class="splash-train">
-      <div class="st-engine">
-        <div class="st-cabin"></div>
-        <div class="st-nose"></div>
-        <div class="st-front-light"></div>
-        <div class="st-chimney"></div>
-        <div class="st-smoke" id="st-smoke"></div>
-      </div>
-      <div class="st-coach st-coach-1"><div class="st-windows"><span></span><span></span><span></span></div></div>
-      <div class="st-coach st-coach-2"><div class="st-windows"><span></span><span></span><span></span></div></div>
-      <div class="st-coach st-coach-3"><div class="st-windows"><span></span><span></span><span></span></div></div>
-      <div class="st-wheels">
-        <div class="st-wheel"></div><div class="st-wheel"></div>
-        <div class="st-wheel"></div><div class="st-wheel"></div>
-        <div class="st-wheel"></div><div class="st-wheel"></div>
-      </div>
-    </div>
-  </div>
+  <!-- Clean Portal Splash Backdrop -->
 
   <!-- Central branding -->
   <div class="splash-center">
@@ -293,7 +271,12 @@
           </button>
           <button class="hm-tab" id="tab-schedules" onclick="switchTab('schedules')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Schedules & DB
+            Schedules &amp; DB
+          </button>
+          <button class="hm-tab" id="tab-block-planning" onclick="switchTab('block-planning')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><circle cx="12" cy="10" r="3"/><path d="M5 10h2M17 10h2"/></svg>
+            Block Planning
+            <span class="bp-badge" id="bp-nav-badge">AI</span>
           </button>
           <!-- Station Master only -->
           <button class="hm-tab sm-only hidden" id="tab-my-queries" onclick="switchTab('my-queries')">
@@ -376,14 +359,27 @@
                 Reset View
               </button>
             </div>
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
+              <button class="map-ctrl-btn active" id="btn-toggle-congestion" onclick="toggleCongestionMode()" title="Toggle Google Maps Congestion & Sensors Mode" style="background:rgba(37,99,235,0.12);color:var(--blue-600);border-color:rgba(37,99,235,0.3);font-weight:600;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                🚦 Traffic Congestion &amp; Sensors
+              </button>
+              <button class="map-ctrl-btn" onclick="openAddRepairModal()" title="Add repair location at specific KM" style="background:linear-gradient(135deg,rgba(220,38,38,0.1),rgba(234,88,12,0.12));color:#dc2626;border-color:rgba(220,38,38,0.3);font-weight:600;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                ➕ Add Repair Location (KM)
+              </button>
+            </div>
           </div>
 
           <div class="sidebar-section">
-            <h3 class="sidebar-title">Legend</h3>
+            <h3 class="sidebar-title">Track Status &amp; Traffic Legend</h3>
             <div class="legend">
-              <div class="legend-item"><div class="legend-line operational"></div><span>Operational Track</span></div>
-              <div class="legend-item"><div class="legend-line blocked"></div><span>Blocked Track</span></div>
+              <div class="legend-item"><div class="legend-line operational" style="background:#10b981;"></div><span>Clear Flow (130 km/h)</span></div>
+              <div class="legend-item"><div class="legend-line" style="background:#f59e0b;"></div><span>Caution / TSR (30–50 km/h)</span></div>
+              <div class="legend-item"><div class="legend-line blocked" style="background:#ef4444;"></div><span>Active Repair / Block (0 km/h)</span></div>
               <div class="legend-item"><div class="legend-line deviated"></div><span>Deviated Route</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#0284c7;box-shadow:0 0 6px #0284c7;"></div><span>Virtual Sensor Node (VSN)</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#dc2626;box-shadow:0 0 8px #dc2626;"></div><span>Track Repair Worksite</span></div>
               <div class="legend-item"><div class="legend-dot terminal"></div><span>Terminal Station</span></div>
               <div class="legend-item"><div class="legend-dot junction"></div><span>Junction</span></div>
             </div>
@@ -438,9 +434,37 @@
                 <span class="track-status-badge" id="track-popup-status">Operational</span>
               </div>
               <div class="track-popup-reason hidden" id="track-popup-reason"></div>
+
+              <!-- Virtual Sensor & Telemetry Snapshot for this track -->
+              <div class="track-popup-sensors" id="track-popup-sensors"></div>
+
+              <!-- Active repairs on this track -->
+              <div class="track-popup-repairs" id="track-popup-repairs"></div>
+
+              <!-- Action buttons: Raise Query, Add Repair, Issue Deviation -->
+              <div class="track-popup-actions" id="track-popup-actions">
+                <button class="track-action-btn query-btn" id="tp-btn-query" onclick="handleTrackPopupQuery()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  ⚡ Raise Query on this Track
+                </button>
+                <button class="track-action-btn repair-btn" id="tp-btn-repair" onclick="handleTrackPopupRepair()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                  📍 Add Repair Spot (KM)
+                </button>
+              </div>
+
               <!-- SM-only deviate button (injected by JS) -->
               <div id="track-popup-deviate-area"></div>
             </div>
+          </div>
+
+          <!-- Virtual Sensor & Repair Telemetry Popup (On Map Click) -->
+          <div class="sensor-popup hidden" id="sensor-telemetry-popup">
+            <div class="popup-header">
+              <div class="sensor-popup-badge" id="sensor-popup-badge">📡 VSN-NODE</div>
+              <button class="popup-close" onclick="closeSensorPopup()">✕</button>
+            </div>
+            <div class="popup-body" id="sensor-popup-body"></div>
           </div>
 
           <!-- Deviation Route Overlay Info -->
@@ -567,6 +591,237 @@
       <div class="my-route-content" id="my-route-content"></div>
     </div>
 
+    <!-- =============== BLOCK PLANNING TAB =============== -->
+    <div class="tab-panel" id="panel-block-planning">
+
+      <!-- Header Row -->
+      <div class="bp-header-row">
+        <div class="bp-header-left">
+          <div class="bp-title-block">
+            <div class="bp-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><rect x="2" y="3" width="20" height="14" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M5 10h2M17 10h2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </div>
+            <div>
+              <h2 class="bp-main-title">AI Block Planning System</h2>
+              <p class="bp-main-sub">Automatic Block Scheduling · Engineering · TRD · S&amp;T</p>
+            </div>
+          </div>
+        </div>
+        <div class="bp-header-right">
+          <div class="bp-live-chip"><span class="live-dot"></span>Live Sync</div>
+          <button class="bp-optimize-btn" id="bp-optimize-btn" onclick="runAIOptimizer()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Run AI Optimizer
+          </button>
+          <div class="bp-view-toggle">
+            <button class="bp-vt-btn active" id="bpvt-week" onclick="switchBPView('week')">Weekly</button>
+            <button class="bp-vt-btn" id="bpvt-month" onclick="switchBPView('month')">Monthly</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Stats Row -->
+      <div class="bp-stats-row" id="bp-stats-row">
+        <div class="bp-stat-card">
+          <div class="bp-stat-icon" style="background:rgba(37,99,235,0.12);color:var(--blue-600)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div class="bp-stat-body">
+            <div class="bp-stat-val" id="bpst-active">0</div>
+            <div class="bp-stat-label">Active Blocks Today</div>
+          </div>
+        </div>
+        <div class="bp-stat-card">
+          <div class="bp-stat-icon" style="background:rgba(245,158,11,0.12);color:#d97706">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <div class="bp-stat-body">
+            <div class="bp-stat-val" id="bpst-pending">0</div>
+            <div class="bp-stat-label">Pending Tasks</div>
+          </div>
+        </div>
+        <div class="bp-stat-card">
+          <div class="bp-stat-icon" style="background:rgba(16,185,129,0.12);color:#059669">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="bp-stat-body">
+            <div class="bp-stat-val" id="bpst-combined">0</div>
+            <div class="bp-stat-label">Tasks Combined (AI)</div>
+          </div>
+        </div>
+        <div class="bp-stat-card">
+          <div class="bp-stat-icon" style="background:rgba(99,102,241,0.12);color:#4f46e5">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="bp-stat-body">
+            <div class="bp-stat-val" id="bpst-availability">0%</div>
+            <div class="bp-stat-label">Infrastructure Availability</div>
+          </div>
+        </div>
+        <div class="bp-stat-card">
+          <div class="bp-stat-icon" style="background:rgba(239,68,68,0.12);color:#dc2626">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <div class="bp-stat-body">
+            <div class="bp-stat-val" id="bpst-critical">0</div>
+            <div class="bp-stat-label">Critical Priority</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Layout: Gantt + Sidebar -->
+      <div class="bp-main-layout">
+
+        <!-- LEFT: Gantt Timeline + Dept Cards -->
+        <div class="bp-left-col">
+
+          <!-- Today's Block Timeline -->
+          <div class="bp-card">
+            <div class="bp-card-header">
+              <h3 class="bp-card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Today's Block Timeline
+              </h3>
+              <div class="bp-gantt-legend">
+                <span class="bp-legend-item" style="--lc:#1565C0"><span class="bp-legend-dot"></span>Engineering</span>
+                <span class="bp-legend-item" style="--lc:#0284c7"><span class="bp-legend-dot"></span>TRD</span>
+                <span class="bp-legend-item" style="--lc:#0891b2"><span class="bp-legend-dot"></span>S&amp;T</span>
+                <span class="bp-legend-item" style="--lc:#3730a3"><span class="bp-legend-dot"></span>Combined</span>
+              </div>
+            </div>
+            <div class="bp-gantt-wrap">
+              <canvas id="bp-gantt-canvas" class="bp-gantt-canvas"></canvas>
+              <div class="bp-gantt-tooltip" id="bp-gantt-tooltip"></div>
+            </div>
+          </div>
+
+          <!-- Department Status Cards -->
+          <div class="bp-dept-grid">
+            <div class="bp-dept-card dept-eng">
+              <div class="bp-dept-header">
+                <div class="bp-dept-icon">⚙️</div>
+                <div>
+                  <div class="bp-dept-name">Engineering (TMS)</div>
+                  <div class="bp-dept-sys">Track Management System</div>
+                </div>
+                <div class="bp-dept-count" id="bp-dept-eng-count">–</div>
+              </div>
+              <div class="bp-dept-tasks" id="bp-dept-eng-tasks"></div>
+            </div>
+            <div class="bp-dept-card dept-trd">
+              <div class="bp-dept-header">
+                <div class="bp-dept-icon">⚡</div>
+                <div>
+                  <div class="bp-dept-name">TRD (TDMS)</div>
+                  <div class="bp-dept-sys">Traction Distribution System</div>
+                </div>
+                <div class="bp-dept-count" id="bp-dept-trd-count">–</div>
+              </div>
+              <div class="bp-dept-tasks" id="bp-dept-trd-tasks"></div>
+            </div>
+            <div class="bp-dept-card dept-snt">
+              <div class="bp-dept-header">
+                <div class="bp-dept-icon">📡</div>
+                <div>
+                  <div class="bp-dept-name">S&amp;T (SMMS)</div>
+                  <div class="bp-dept-sys">Signal &amp; Maintenance System</div>
+                </div>
+                <div class="bp-dept-count" id="bp-dept-snt-count">–</div>
+              </div>
+              <div class="bp-dept-tasks" id="bp-dept-snt-tasks"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: AI Queue + Optimized Plan -->
+        <div class="bp-right-col">
+
+          <!-- AI Priority Queue -->
+          <div class="bp-card bp-queue-card">
+            <div class="bp-card-header">
+              <h3 class="bp-card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                AI Maintenance Priority Queue
+              </h3>
+              <div class="bp-queue-filters">
+                <select class="bp-filter-sel" id="bp-dept-filter" onchange="renderBPQueue()">
+                  <option value="all">All Depts</option>
+                  <option value="ENG">Engineering</option>
+                  <option value="TRD">TRD</option>
+                  <option value="SNT">S&amp;T</option>
+                </select>
+                <select class="bp-filter-sel" id="bp-priority-filter" onchange="renderBPQueue()">
+                  <option value="all">All Priority</option>
+                  <option value="critical">Critical</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                </select>
+              </div>
+            </div>
+            <div class="bp-queue-list" id="bp-queue-list"></div>
+          </div>
+
+          <!-- Optimized Block Plan -->
+          <div class="bp-card">
+            <div class="bp-card-header">
+              <h3 class="bp-card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+                Optimized Block Plan – This Week
+              </h3>
+              <button class="bp-export-btn" onclick="exportBlockPlan()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export
+              </button>
+            </div>
+            <div class="bp-plan-table-wrap">
+              <table class="bp-plan-table" id="bp-plan-table">
+                <thead>
+                  <tr>
+                    <th>Block Window</th>
+                    <th>Section</th>
+                    <th>Departments</th>
+                    <th>Tasks</th>
+                    <th>Impact</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="bp-plan-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- AI Optimizer Result Banner -->
+      <div class="bp-optimizer-banner hidden" id="bp-optimizer-banner">
+        <div class="bpob-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <div class="bpob-text">
+          <div class="bpob-title" id="bpob-title">AI Optimization Complete</div>
+          <div class="bpob-sub" id="bpob-sub">Loading results…</div>
+        </div>
+        <button class="bpob-close" onclick="document.getElementById('bp-optimizer-banner').classList.add('hidden')">✕</button>
+      </div>
+
+      <!-- AI Optimizer Overlay -->
+      <div class="bp-optimizer-overlay hidden" id="bp-optimizer-overlay">
+        <div class="bpoo-box">
+          <div class="bpoo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <div class="bpoo-title">AI Optimizer Running…</div>
+          <div class="bpoo-sub">Analysing maintenance data from TMS · SMMS · TDMS</div>
+          <div class="bpoo-progress-wrap">
+            <div class="bpoo-progress-bar"><div class="bpoo-progress-fill" id="bpoo-fill"></div></div>
+            <div class="bpoo-steps" id="bpoo-steps">Initialising engine…</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end block-planning panel -->
+
   </div><!-- end dashboard-content -->
 </div><!-- end dashboard-page -->
 
@@ -640,6 +895,125 @@
 </div>
 
 <!-- ======================================================
+     ADD TRACK REPAIR & VIRTUAL SENSOR MODAL
+     ====================================================== -->
+<div class="modal-overlay hidden" id="repair-modal-overlay" onclick="closeAddRepairModal(event)">
+  <div class="modal-box" id="repair-modal" style="max-width:560px;">
+    <div class="modal-header" style="background:linear-gradient(135deg,rgba(220,38,38,0.1),rgba(234,88,12,0.1));">
+      <div class="modal-header-icon" style="background:linear-gradient(135deg,#dc2626,#ea580c);color:#fff;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      </div>
+      <div>
+        <h3>Pinpoint Track Repair &amp; Sensor Zone</h3>
+        <p>Mark exact repair chainage (KM) along large track corridors</p>
+      </div>
+      <button class="modal-close-btn" onclick="closeAddRepairModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form class="modal-form" id="repair-form" onsubmit="submitAddRepair(event)">
+      <div class="modal-form-row">
+        <div class="mf-group" style="flex:2;">
+          <label>Select Track Corridor *</label>
+          <select class="mf-input" id="rf-track" onchange="onRepairTrackSelectChange()" required>
+            <option value="">-- Choose Track --</option>
+          </select>
+        </div>
+        <div class="mf-group" style="flex:1;">
+          <label>Total Length</label>
+          <input class="mf-input" id="rf-total-len" readonly value="– km" style="background:var(--gray-100,#f3f4f6);font-weight:600;" />
+        </div>
+      </div>
+
+      <!-- KM Chainage Slider & Number -->
+      <div class="mf-group" style="background:rgba(37,99,235,0.05);padding:10px 14px;border-radius:8px;border:1px solid rgba(37,99,235,0.15);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <label style="margin:0;font-weight:700;color:var(--blue-700);">Exact Worksite Location (KM Chainage) *</label>
+          <span id="rf-km-badge" style="background:var(--blue-600);color:#fff;font-size:12px;font-weight:700;padding:2px 8px;border-radius:12px;">KM 50.0</span>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <input type="range" class="mf-range" id="rf-km-slider" min="1" max="500" step="0.5" value="50" oninput="syncKmInput(this.value)" style="flex:1;" />
+          <input type="number" class="mf-input" id="rf-km-number" min="0" max="2500" step="0.1" value="50" oninput="syncKmSlider(this.value)" style="width:90px;" required />
+        </div>
+        <div style="font-size:11px;color:var(--gray-500);margin-top:4px;" id="rf-km-hint">Position along track corridor from origin station</div>
+      </div>
+
+      <div class="modal-form-row">
+        <div class="mf-group">
+          <label>Repair / Defect Type *</label>
+          <select class="mf-input" id="rf-type" required>
+            <option value="Rail Fracture & Weld Replacement">Rail Fracture &amp; Weld Replacement</option>
+            <option value="Deep Screening & Ballast Tamping">Deep Screening &amp; Ballast Tamping</option>
+            <option value="Track Subsidence & Settlement">Track Subsidence &amp; Settlement</option>
+            <option value="USFD Ultrasonic Flaw Anomaly">USFD Ultrasonic Flaw Anomaly</option>
+            <option value="Overhead Equipment (OHE) Mast Repair">Overhead Equipment (OHE) Mast Repair</option>
+            <option value="Signal & Track Circuit Glitch">Signal &amp; Track Circuit Glitch</option>
+            <option value="Bridge Inspection & Bearing Maintenance">Bridge Inspection &amp; Bearing Maintenance</option>
+            <option value="Emergency Monsoon Flash Flood Repair">Emergency Monsoon Flash Flood Repair</option>
+          </select>
+        </div>
+        <div class="mf-group">
+          <label>Traffic Congestion &amp; TSR *</label>
+          <select class="mf-input" id="rf-tsr" required>
+            <option value="0">⛔ 0 km/h (Full Line Block - Severe Red)</option>
+            <option value="20">🟠 20 km/h (Caution Order - High Amber)</option>
+            <option value="30" selected>🟡 30 km/h (TSR Restriction - Amber)</option>
+            <option value="50">🟡 50 km/h (Moderate Speed Restriction)</option>
+            <option value="75">🟢 75 km/h (Precautionary Observation)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Virtual Sensor Telemetry Inputs -->
+      <div class="mf-group" style="background:rgba(2,132,199,0.06);padding:10px 14px;border-radius:8px;border:1px solid rgba(2,132,199,0.2);">
+        <label style="margin:0 0 6px 0;font-weight:700;color:#0284c7;display:flex;align-items:center;gap:6px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+          Virtual Sensor Network (VSN) Telemetry at this KM
+        </label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+          <div>
+            <span style="font-size:11px;color:var(--gray-600);display:block;">Vibration (mm/s²)</span>
+            <input type="number" step="0.1" class="mf-input" id="rf-vibration" value="4.8" style="padding:5px 8px;font-size:12px;" />
+          </div>
+          <div>
+            <span style="font-size:11px;color:var(--gray-600);display:block;">Rail Temp (°C)</span>
+            <input type="number" step="0.5" class="mf-input" id="rf-temp" value="48.5" style="padding:5px 8px;font-size:12px;" />
+          </div>
+          <div>
+            <span style="font-size:11px;color:var(--gray-600);display:block;">Track Defect (mm)</span>
+            <input type="number" step="0.5" class="mf-input" id="rf-defect" value="14.2" style="padding:5px 8px;font-size:12px;" />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-form-row">
+        <div class="mf-group">
+          <label>Assigned Maintenance Gang</label>
+          <input type="text" class="mf-input" id="rf-crew" value="P-Way Gang #12 (SSE/Track)" />
+        </div>
+        <div class="mf-group">
+          <label>Est. Restoration (Hours)</label>
+          <input type="number" class="mf-input" id="rf-hours" min="1" max="120" value="4" required />
+        </div>
+      </div>
+
+      <div class="mf-group">
+        <label>Worksite Notes / Landmarks</label>
+        <textarea class="mf-input mf-textarea" id="rf-notes" rows="2" placeholder="e.g. Km 142/6 between Ganghut 21 and Bridge 44. Weld fractured on Down Track."></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="modal-cancel-btn" onclick="closeAddRepairModal()">Cancel</button>
+        <button type="submit" class="modal-submit-btn" style="background:linear-gradient(135deg,#dc2626,#ea580c);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          Pinpoint Repair on Map
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ======================================================
      DEVIATION MODAL (Station Master)
      ====================================================== -->
 <div class="modal-overlay hidden" id="deviation-modal-overlay" onclick="closeDeviationModal(event)">
@@ -699,5 +1073,6 @@
 <!-- Scripts -->
 <script src="data/railway_network.js"></script>
 <script src="scripts/app.js"></script>
+<script src="scripts/block_planning.js"></script>
 </body>
 </html>
