@@ -4,12 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="TrainSync – Indian Railways Integrated Management System. Secure portal for Station Masters, Repair Engineers, and Loco Pilots." />
-  <meta name="theme-color" content="#0d2b6e" />
+  <meta name="theme-color" content="#1a73e8" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>TrainSync – Indian Railways IMS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/main.css?v=20260911_4" />
 </head>
 <body>
 
@@ -360,11 +363,11 @@
               </button>
             </div>
             <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
-              <button class="map-ctrl-btn active" id="btn-toggle-congestion" onclick="toggleCongestionMode()" title="Toggle Google Maps Congestion & Sensors Mode" style="background:rgba(37,99,235,0.12);color:var(--blue-600);border-color:rgba(37,99,235,0.3);font-weight:600;">
+              <button class="map-ctrl-btn active" id="btn-toggle-congestion" onclick="toggleCongestionMode()" title="Toggle Traffic Flow & Sensors" style="background:#ffffff;color:#1a73e8;border:1px solid #dadce0;font-weight:600;box-shadow:0 1px 2px rgba(60,64,67,0.1);">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                🚦 Traffic Congestion &amp; Sensors
+                🚦 Traffic Flow &amp; Sensors
               </button>
-              <button class="map-ctrl-btn" onclick="openAddRepairModal()" title="Add repair location at specific KM" style="background:linear-gradient(135deg,rgba(220,38,38,0.1),rgba(234,88,12,0.12));color:#dc2626;border-color:rgba(220,38,38,0.3);font-weight:600;">
+              <button class="map-ctrl-btn" onclick="openAddRepairModal()" title="Add repair location at specific KM" style="background:#ffffff;color:#d93025;border:1px solid #dadce0;font-weight:600;box-shadow:0 1px 2px rgba(60,64,67,0.1);">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
                 ➕ Add Repair Location (KM)
               </button>
@@ -374,14 +377,14 @@
           <div class="sidebar-section">
             <h3 class="sidebar-title">Track Status &amp; Traffic Legend</h3>
             <div class="legend">
-              <div class="legend-item"><div class="legend-line operational" style="background:#10b981;"></div><span>Clear Flow (130 km/h)</span></div>
-              <div class="legend-item"><div class="legend-line" style="background:#f59e0b;"></div><span>Caution / TSR (30–50 km/h)</span></div>
-              <div class="legend-item"><div class="legend-line blocked" style="background:#ef4444;"></div><span>Active Repair / Block (0 km/h)</span></div>
-              <div class="legend-item"><div class="legend-line deviated"></div><span>Deviated Route</span></div>
-              <div class="legend-item"><div class="legend-dot" style="background:#0284c7;box-shadow:0 0 6px #0284c7;"></div><span>Virtual Sensor Node (VSN)</span></div>
-              <div class="legend-item"><div class="legend-dot" style="background:#dc2626;box-shadow:0 0 8px #dc2626;"></div><span>Track Repair Worksite</span></div>
-              <div class="legend-item"><div class="legend-dot terminal"></div><span>Terminal Station</span></div>
-              <div class="legend-item"><div class="legend-dot junction"></div><span>Junction</span></div>
+              <div class="legend-item"><div class="legend-line operational" style="background:#1e8e3e;"></div><span>Normal Flow (130 km/h)</span></div>
+              <div class="legend-item"><div class="legend-line" style="background:#f9ab00;"></div><span>Caution / TSR (30–50 km/h)</span></div>
+              <div class="legend-item"><div class="legend-line blocked" style="background:#d93025;"></div><span>Blocked / Repair (0 km/h)</span></div>
+              <div class="legend-item"><div class="legend-line deviated" style="background:#1a73e8;"></div><span>Alternative Route</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#1a73e8;border:2px solid #ffffff;box-shadow:0 1px 2px rgba(0,0,0,0.2);"></div><span>Virtual Sensor Node (VSN)</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#d93025;border:2px solid #ffffff;box-shadow:0 1px 2px rgba(0,0,0,0.2);"></div><span>Track Worksite (KM)</span></div>
+              <div class="legend-item"><div class="legend-dot terminal" style="background:#ffffff;border:2.5px solid #1a73e8;"></div><span>Major Terminal Station</span></div>
+              <div class="legend-item"><div class="legend-dot junction" style="background:#ffffff;border:2px solid #3c4043;"></div><span>Station / Junction</span></div>
             </div>
           </div>
 
@@ -1101,8 +1104,8 @@
 </div>
 
 <!-- Scripts -->
-<script src="data/railway_network.js"></script>
-<script src="scripts/app.js"></script>
-<script src="scripts/block_planning.js"></script>
+<script src="data/railway_network.js?v=20260911_4"></script>
+<script src="scripts/app.js?v=20260911_4"></script>
+<script src="scripts/block_planning.js?v=20260911_4"></script>
 </body>
 </html>
