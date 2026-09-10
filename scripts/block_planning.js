@@ -59,6 +59,109 @@ const BP_DATA = {
     { id:'WP-006', window:'Fri 10:00–12:00', section:'LKO–GKP',  depts:['ENG','SNT'],      tasks:['T006','T016'],               impact:'None',   status:'planned'   },
     { id:'WP-007', window:'Sat 00:00–06:00', section:'NDLS–CNB', depts:['ENG','TRD'],      tasks:['T005'],                      impact:'Low',    status:'planned'   },
   ],
+
+  // Daily records of executed, active, and slated blocks for today
+  dailyRecords: [
+    { id:'DBR-101', date:'Today (10-Sep)', window:'02:00 – 06:00', section:'NDLS–CNB', kmSpan:'KM 42/12 – 47/18', depts:['ENG','TRD','SNT'], tasks:['T001','T004','T007'], machinery:'09-3X Tamping Machine + Tower Wagon 428', regulation:'2 Freight trains regulated by 22m', status:'active', efficiency:'96%' },
+    { id:'DBR-102', date:'Today (10-Sep)', window:'00:00 – 03:00', section:'NDLS–CNB', kmSpan:'KM 18/04 – 19/20', depts:['SNT'], tasks:['T015'], machinery:'OFC Optical Splicer Kit', regulation:'1 Express train cautioned (15 kmph)', status:'completed', efficiency:'98%' },
+    { id:'DBR-103', date:'Today (10-Sep)', window:'10:00 – 12:00', section:'SUR–ST', kmSpan:'KM 114/02 – 116/10', depts:['TRD','SNT'], tasks:['T011','T017'], machinery:'Ladder Trolley + TRD Inspection Car', regulation:'Zero train detention (Shadow block)', status:'scheduled', efficiency:'100%' },
+    { id:'DBR-104', date:'Today (10-Sep)', window:'22:00 – 01:30', section:'CNB–ALD', kmSpan:'KM 212/00 – 215/14', depts:['ENG','TRD'], tasks:['T002','T008'], machinery:'DGS Dynamic Track Stabilizer', regulation:'3 Express trains diverted to Loop 2', status:'scheduled', efficiency:'94%' },
+    { id:'DBR-105', date:'Today (10-Sep)', window:'23:30 – 04:30', section:'ALD–MGS', kmSpan:'KM 304/10 – 309/22', depts:['ENG','TRD','SNT'], tasks:['T003','T009','T014'], machinery:'Crane B-40 + Ultrasonic Testing Rig', regulation:'Freight traffic held at Naini Jn', status:'planned', efficiency:'92%' }
+  ],
+
+  // Monthly aggregated overhaul & corridor quotas
+  monthlyRecords: [
+    { id:'MBR-M1', month:'September 2026', weekRange:'Week 1 (01-07 Sep)', section:'NDLS–CNB', totalBlocks:14, hrsBlocked:54, departments:'ENG + TRD + SNT', quotaAchieved:'94.8%', trainPunctuality:'96.2%', status:'completed' },
+    { id:'MBR-M2', month:'September 2026', weekRange:'Week 2 (08-14 Sep)', section:'CNB–ALD',  totalBlocks:11, hrsBlocked:42, departments:'ENG + TRD',         quotaAchieved:'91.5%', trainPunctuality:'94.8%', status:'active' },
+    { id:'MBR-M3', month:'September 2026', weekRange:'Week 2 (08-14 Sep)', section:'ALD–MGS',  totalBlocks:10, hrsBlocked:38, departments:'ENG + TRD + SNT', quotaAchieved:'88.0%', trainPunctuality:'93.4%', status:'active' },
+    { id:'MBR-M4', month:'September 2026', weekRange:'Week 3 (15-21 Sep)', section:'SUR–ST',   totalBlocks:8,  hrsBlocked:24, departments:'TRD + SNT',         quotaAchieved:'Slated',trainPunctuality:'98.0%', status:'planned' },
+    { id:'MBR-M5', month:'September 2026', weekRange:'Week 3 (15-21 Sep)', section:'MGS–PNBE', totalBlocks:9,  hrsBlocked:30, departments:'TRD',               quotaAchieved:'Slated',trainPunctuality:'97.5%', status:'planned' },
+    { id:'MBR-M6', month:'September 2026', weekRange:'Week 4 (22-30 Sep)', section:'LKO–GKP',  totalBlocks:6,  hrsBlocked:18, departments:'ENG + SNT',         quotaAchieved:'Slated',trainPunctuality:'99.0%', status:'planned' },
+  ],
+
+  // AI Block Probability and "Where Can Be What" tracking model
+  aiPredictions: [
+    {
+      id: 'AIP-01',
+      section: 'NDLS–CNB',
+      kmRange: 'KM 42/10 – 48/25 (Ghaziabad–Aligarh Down ML)',
+      chanceOfBlock: 94,
+      urgency: 'Immediate Intervention (Next 24h)',
+      whyBlockNeeded: 'High acoustic rail oscillation detected by axle sensors + USFD ultrasonic probe detected micro-fissure at weld joint #46. Heavy freight GMT loading exceeded wear threshold.',
+      whereCanBeWhat: {
+        where: 'Down Main Line KM 45/14 near Dadri Loop',
+        what: 'Triple Department Simultaneous Joint Block (Track Tamping + Catenary Dropper Adjustment + Track Circuit Tuning)',
+        optimalWindow: 'Tomorrow 02:15 – 05:45 AM (Ghost Freight Shadow Window)',
+        trainsAffected: 'Zero passenger trains (2 Container rakes buffered at Maripat)',
+        suggestedSlot: 'Combined Corridor Slot #3',
+        prioScore: 98
+      }
+    },
+    {
+      id: 'AIP-02',
+      section: 'ALD–MGS',
+      kmRange: 'KM 312/00 – 316/80 (Mirzapur Gradient Sector)',
+      chanceOfBlock: 87,
+      urgency: 'High (Next 48h Window)',
+      whyBlockNeeded: 'Traction Distribution TDMS logged 4 thermal hotspots on overhead catenary wires. Signal relay room at Mirzapur showing 18ms latching delay.',
+      whereCanBeWhat: {
+        where: 'Up Loop Line KM 314/05 & Mirzapur Junction C-Cabin',
+        what: 'TRD Section Insulator Replacement + S&T Solid State Interlocking Card Swap',
+        optimalWindow: 'Thursday 00:30 – 04:00 AM (Post-Rajdhani Clear Corridor)',
+        trainsAffected: '1 Parcel Special rescheduled (+15m)',
+        suggestedSlot: 'Night Maintenance Super-Block #7',
+        prioScore: 89
+      }
+    },
+    {
+      id: 'AIP-03',
+      section: 'CNB–ALD',
+      kmRange: 'KM 208/10 – 214/40 (Fatehpur Ballast Bed)',
+      chanceOfBlock: 76,
+      urgency: 'Medium-High (Scheduled Weekend)',
+      whyBlockNeeded: 'Ballast void ratio exceeded 14% after monsoon depression; dynamic track geometry index (TGI) dipped to 68/100.',
+      whereCanBeWhat: {
+        where: 'Both Up & Down Lines KM 211/12',
+        what: 'High-speed BCM (Ballast Cleaning Machine) Pack-up & Laser Levelling',
+        optimalWindow: 'Saturday 01:00 – 06:30 AM (Mega Traffic Diversion Window)',
+        trainsAffected: '3 Overnight express trains diverted via loop with 12m caution',
+        suggestedSlot: 'Weekend Integrated Window #W2',
+        prioScore: 82
+      }
+    },
+    {
+      id: 'AIP-04',
+      section: 'SUR–ST',
+      kmRange: 'KM 108/30 – 112/10 (Western Heavy Corridor)',
+      chanceOfBlock: 61,
+      urgency: 'Medium (Next 5–7 Days)',
+      whyBlockNeeded: 'TRD Mast foundation corrosion near marshy creek; point machines #12A and #12B reached 15,000 throw cycles.',
+      whereCanBeWhat: {
+        where: 'Cross-over 14B at Navsari Yard',
+        what: 'Joint S&T Point Machine Overhaul & TRD Mast Guy Rod Strengthening',
+        optimalWindow: 'Wednesday 11:30 AM – 01:30 PM (Midday Passenger Lull)',
+        trainsAffected: 'Zero passenger impact; EMUs run on alternate Platform 3',
+        suggestedSlot: 'Day Shadow Slot #D4',
+        prioScore: 65
+      }
+    },
+    {
+      id: 'AIP-05',
+      section: 'LKO–GKP',
+      kmRange: 'KM 78/00 – 81/50 (Barabanki Jn approaches)',
+      chanceOfBlock: 38,
+      urgency: 'Low / Preventive Monitoring',
+      whyBlockNeeded: 'Routine level crossing overhaul due at LC-47; optical fiber decibel attenuation within permissible limits.',
+      whereCanBeWhat: {
+        where: 'LC-47 Gate Assembly & Track Flangeway',
+        what: 'Rubberized Check Rail Replacement & Road Surface Tarmac Laying',
+        optimalWindow: 'Friday 10:00 AM – 12:00 PM (Local Traffic Block with Road Diversion)',
+        trainsAffected: 'None; 1 DMU cleared with 20 kmph caution order',
+        suggestedSlot: 'Routine Daytime LC Window',
+        prioScore: 44
+      }
+    }
+  ],
 };
 
 // Priority score → visual tier
@@ -78,12 +181,12 @@ const deptColor  = { ENG:'#1565C0', TRD:'#0284c7', SNT:'#0891b2' };
 let bpInitialised = false;
 
 function initBlockPlanning() {
-  if (bpInitialised) { updateBPStats(); return; }
+  if (bpInitialised) { updateBPStats(); filterBPRecords(); return; }
   bpInitialised = true;
   updateBPStats();
   renderBPQueue();
-  renderBPWeeklyPlan();
   renderDeptCards();
+  switchBPView(BP_DATA.currentView || 'week');
   setTimeout(() => drawGantt(), 80);
 }
 
@@ -396,11 +499,42 @@ function renderBPQueue() {
 // ─────────────────────────────────────────────────────────────
 // WEEKLY BLOCK PLAN TABLE
 // ─────────────────────────────────────────────────────────────
-function renderBPWeeklyPlan() {
+function renderBPWeeklyPlan(filterQuery = '', filterCorridor = 'all') {
   const tbody = document.getElementById('bp-plan-tbody');
+  const thead = document.getElementById('bp-plan-thead');
   if (!tbody) return;
 
-  tbody.innerHTML = BP_DATA.weeklyPlan.map(wp => {
+  if (thead) {
+    thead.innerHTML = `<tr>
+      <th>Block Window</th>
+      <th>Corridor / Section</th>
+      <th>Departments</th>
+      <th>Integrated Tasks</th>
+      <th>Impact / Punctuality</th>
+      <th>Status</th>
+    </tr>`;
+  }
+
+  let list = BP_DATA.weeklyPlan;
+  if (filterCorridor !== 'all') {
+    list = list.filter(wp => wp.section === filterCorridor);
+  }
+  if (filterQuery.trim()) {
+    const q = filterQuery.toLowerCase();
+    list = list.filter(wp =>
+      wp.section.toLowerCase().includes(q) ||
+      wp.window.toLowerCase().includes(q) ||
+      wp.depts.some(d => d.toLowerCase().includes(q) || (deptLabel[d] && deptLabel[d].toLowerCase().includes(q))) ||
+      wp.tasks.some(t => t.toLowerCase().includes(q))
+    );
+  }
+
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--gray-400);">No weekly block records match the criteria.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(wp => {
     const deptChips = wp.depts.map(d =>
       `<span class="bp-dept-chip ${d.toLowerCase()}-dept">${deptLabel[d]}</span>`
     ).join('');
@@ -426,62 +560,311 @@ function renderBPWeeklyPlan() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// VIEW TOGGLE (Weekly / Monthly)
+// DAILY BLOCK RECORDS TABLE
+// ─────────────────────────────────────────────────────────────
+function renderBPDailyRecords(filterQuery = '', filterCorridor = 'all') {
+  const tbody = document.getElementById('bp-plan-tbody');
+  const thead = document.getElementById('bp-plan-thead');
+  if (!tbody) return;
+
+  if (thead) {
+    thead.innerHTML = `<tr>
+      <th>Execution Slot & ID</th>
+      <th>Corridor & KM Span</th>
+      <th>Gangs / Machinery</th>
+      <th>Tasks Handled</th>
+      <th>Train Regulation & Efficiency</th>
+      <th>Status</th>
+    </tr>`;
+  }
+
+  let list = BP_DATA.dailyRecords;
+  if (filterCorridor !== 'all') {
+    list = list.filter(d => d.section === filterCorridor);
+  }
+  if (filterQuery.trim()) {
+    const q = filterQuery.toLowerCase();
+    list = list.filter(d =>
+      d.section.toLowerCase().includes(q) ||
+      d.id.toLowerCase().includes(q) ||
+      d.kmSpan.toLowerCase().includes(q) ||
+      d.machinery.toLowerCase().includes(q) ||
+      d.regulation.toLowerCase().includes(q) ||
+      d.depts.some(dp => dp.toLowerCase().includes(q))
+    );
+  }
+
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--gray-400);">No daily block logs found for today.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(d => {
+    const deptChips = d.depts.map(dp =>
+      `<span class="bp-dept-chip ${dp.toLowerCase()}-dept">${deptLabel[dp] || dp}</span>`
+    ).join('');
+    const taskChips = d.tasks.map(tid => `<span class="bp-task-chip">${tid}</span>`).join('');
+    const statusClass = { 'completed':'status-active-bp', 'active':'status-sched-bp', 'scheduled':'status-planned-bp', 'planned':'status-planned-bp' }[d.status] || '';
+
+    return `<tr class="bp-plan-row ${d.status}">
+      <td class="bp-plan-window">
+        <div style="font-weight:700;color:var(--blue-800);">${d.window}</div>
+        <div style="font-size:10px;color:var(--gray-400);">${d.id} · ${d.date}</div>
+      </td>
+      <td>
+        <span class="bp-section-chip">${d.section}</span>
+        <div style="font-size:11px;color:var(--gray-500);margin-top:2px;">📍 ${d.kmSpan}</div>
+      </td>
+      <td>
+        <div class="bp-dept-chips" style="margin-bottom:4px;">${deptChips}</div>
+        <div style="font-size:11px;color:var(--gray-600);font-weight:500;">🚜 ${d.machinery}</div>
+      </td>
+      <td><div class="bp-task-chips">${taskChips}</div></td>
+      <td>
+        <div style="font-size:11px;font-weight:600;color:var(--blue-900);">${d.regulation}</div>
+        <div style="font-size:10px;color:#059669;font-weight:700;margin-top:2px;">⚡ Efficiency: ${d.efficiency}</div>
+      </td>
+      <td><span class="bp-status-badge ${statusClass}">${d.status.toUpperCase()}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────────────────────
+// MONTHLY BLOCK RECORDS TABLE
+// ─────────────────────────────────────────────────────────────
+function renderBPMonthlyRecords(filterQuery = '', filterCorridor = 'all') {
+  const tbody = document.getElementById('bp-plan-tbody');
+  const thead = document.getElementById('bp-plan-thead');
+  if (!tbody) return;
+
+  if (thead) {
+    thead.innerHTML = `<tr>
+      <th>Month & Schedule Period</th>
+      <th>Corridor / Zone</th>
+      <th>Departments Combined</th>
+      <th>Total Blocks & Cumulative Hrs</th>
+      <th>Quota Achieved</th>
+      <th>Train Punctuality Index</th>
+    </tr>`;
+  }
+
+  let list = BP_DATA.monthlyRecords;
+  if (filterCorridor !== 'all') {
+    list = list.filter(m => m.section === filterCorridor);
+  }
+  if (filterQuery.trim()) {
+    const q = filterQuery.toLowerCase();
+    list = list.filter(m =>
+      m.section.toLowerCase().includes(q) ||
+      m.weekRange.toLowerCase().includes(q) ||
+      m.departments.toLowerCase().includes(q) ||
+      m.month.toLowerCase().includes(q)
+    );
+  }
+
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--gray-400);">No monthly records found.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(m => {
+    return `<tr class="bp-plan-row">
+      <td class="bp-plan-window">
+        <div style="font-weight:700;color:var(--blue-900);">${m.weekRange}</div>
+        <div style="font-size:10px;color:var(--gray-400);">${m.month} · ${m.id}</div>
+      </td>
+      <td><span class="bp-section-chip" style="font-weight:700;">${m.section}</span></td>
+      <td><div style="font-size:12px;font-weight:600;color:var(--blue-700);">${m.departments}</div></td>
+      <td>
+        <div style="font-weight:700;color:var(--blue-800);">${m.totalBlocks} Blocks</div>
+        <div style="font-size:10px;color:var(--gray-500);">${m.hrsBlocked} hrs total track possession</div>
+      </td>
+      <td>
+        <span class="bp-status-badge status-sched-bp" style="font-weight:700;">${m.quotaAchieved}</span>
+      </td>
+      <td>
+        <div style="font-size:12px;font-weight:700;color:#059669;">${m.trainPunctuality}</div>
+        <div style="font-size:10px;color:var(--gray-400);">Zone Target: &gt;92%</div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────────────────────
+// AI PREDICTIVE BLOCK TRACKING & "WHERE CAN BE WHAT"
+// ─────────────────────────────────────────────────────────────
+function renderBPAiPredictions(filterQuery = '', filterCorridor = 'all') {
+  const container = document.getElementById('bp-predict-grid');
+  if (!container) return;
+
+  let list = BP_DATA.aiPredictions;
+  if (filterCorridor !== 'all') {
+    list = list.filter(p => p.section === filterCorridor);
+  }
+  if (filterQuery.trim()) {
+    const q = filterQuery.toLowerCase();
+    list = list.filter(p =>
+      p.section.toLowerCase().includes(q) ||
+      p.kmRange.toLowerCase().includes(q) ||
+      p.whyBlockNeeded.toLowerCase().includes(q) ||
+      p.whereCanBeWhat.where.toLowerCase().includes(q) ||
+      p.whereCanBeWhat.what.toLowerCase().includes(q)
+    );
+  }
+
+  if (!list.length) {
+    container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--gray-400);">No predictive block alerts match the filter.</div>`;
+    return;
+  }
+
+  container.innerHTML = list.map(item => {
+    const chance = item.chanceOfBlock;
+    const tierColor = chance >= 85 ? '#dc2626' : (chance >= 65 ? '#d97706' : '#2563eb');
+    const tierBg = chance >= 85 ? 'rgba(239,68,68,0.1)' : (chance >= 65 ? 'rgba(245,158,11,0.1)' : 'rgba(37,99,235,0.1)');
+    const tierBorder = chance >= 85 ? 'rgba(239,68,68,0.25)' : (chance >= 65 ? 'rgba(245,158,11,0.25)' : 'rgba(37,99,235,0.25)');
+
+    return `
+    <div class="bp-predict-card" id="bpc-${item.id}">
+      <div class="bpp-header">
+        <div>
+          <span class="bp-section-chip" style="font-size:12px;font-weight:700;">${item.section}</span>
+          <span style="font-size:11px;color:var(--gray-400);margin-left:6px;">${item.id}</span>
+          <div style="font-size:11px;font-weight:600;color:var(--gray-600);margin-top:3px;">📍 ${item.kmRange}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="display:inline-block;background:${tierBg};color:${tierColor};border:1px solid ${tierBorder};font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px;">
+            ${item.urgency}
+          </div>
+        </div>
+      </div>
+
+      <!-- Chance of Block Meter -->
+      <div class="bpp-meter-box">
+        <div class="bpp-meter-top">
+          <span class="bpp-meter-label">AI Chance of Block Required</span>
+          <span class="bpp-meter-pct" style="color:${tierColor};">${chance}%</span>
+        </div>
+        <div class="bpp-meter-bar">
+          <div class="bpp-meter-fill" style="width:${chance}%;background:${tierColor};"></div>
+        </div>
+      </div>
+
+      <!-- Why Block is Needed -->
+      <div class="bpp-reason">
+        <strong style="color:var(--blue-900);">AI Diagnostic Cause:</strong> ${item.whyBlockNeeded}
+      </div>
+
+      <!-- Where Can Be What (AI Intelligent Shadow Recommendation) -->
+      <div class="bpp-rec-box">
+        <div class="bpp-rec-title">
+          <span>🎯 AI Recommendation: Where Can Be What</span>
+          <span class="bpp-prio-tag">Priority Index: ${item.whereCanBeWhat.prioScore}/100</span>
+        </div>
+        <div class="bpp-rec-row">
+          <span class="bpp-rec-lbl">Where (Exact Track):</span>
+          <span class="bpp-rec-val" style="color:var(--blue-800);font-weight:600;">${item.whereCanBeWhat.where}</span>
+        </div>
+        <div class="bpp-rec-row">
+          <span class="bpp-rec-lbl">What (Department Work):</span>
+          <span class="bpp-rec-val" style="color:#0f172a;font-weight:500;">${item.whereCanBeWhat.what}</span>
+        </div>
+        <div class="bpp-rec-row">
+          <span class="bpp-rec-lbl">Optimal Shadow Window:</span>
+          <span class="bpp-rec-val" style="color:#059669;font-weight:700;">${item.whereCanBeWhat.optimalWindow}</span>
+        </div>
+        <div class="bpp-rec-row">
+          <span class="bpp-rec-lbl">Train Punctuality Impact:</span>
+          <span class="bpp-rec-val" style="color:var(--gray-600);">${item.whereCanBeWhat.trainsAffected}</span>
+        </div>
+      </div>
+
+      <div class="bpp-actions">
+        <span style="font-size:11px;color:var(--gray-400);">Slot: <strong>${item.whereCanBeWhat.suggestedSlot}</strong></span>
+        <button class="bpp-apply-btn" onclick="applyAiBlockRecommendation('${item.id}')">
+          ⚡ Auto-Integrate into Block Plan
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────────────────────
+// VIEW TOGGLE (Daily / Weekly / Monthly / AI Chances)
 // ─────────────────────────────────────────────────────────────
 function switchBPView(view) {
   BP_DATA.currentView = view;
-  document.getElementById('bpvt-week')?.classList.toggle('active',  view === 'week');
-  document.getElementById('bpvt-month')?.classList.toggle('active', view === 'month');
+  document.getElementById('bpvt-daily')?.classList.toggle('active',      view === 'daily');
+  document.getElementById('bpvt-week')?.classList.toggle('active',       view === 'week');
+  document.getElementById('bpvt-month')?.classList.toggle('active',      view === 'month');
+  document.getElementById('bpvt-ai-predict')?.classList.toggle('active', view === 'ai-predict');
 
-  const tbody = document.getElementById('bp-plan-tbody');
-  if (view === 'month' && tbody) {
-    // Show a richer monthly plan
-    const months = generateMonthlyPlan();
-    tbody.innerHTML = months.map(wp => {
-      const deptChips = wp.depts.map(d =>
-        `<span class="bp-dept-chip ${d.toLowerCase()}-dept">${deptLabel[d]}</span>`
-      ).join('');
-      const impactClass = { 'None':'impact-none','Low':'impact-low','Medium':'impact-med','High':'impact-high' }[wp.impact] || '';
-      const statusClass = { 'active':'status-active-bp','scheduled':'status-sched-bp','planned':'status-planned-bp' }[wp.status] || '';
-      return `<tr class="bp-plan-row ${wp.status}">
-        <td class="bp-plan-window"><div class="bp-plan-clock">📅</div><div>${wp.window}</div></td>
-        <td><span class="bp-section-chip">${wp.section}</span></td>
-        <td><div class="bp-dept-chips">${deptChips}</div></td>
-        <td><div class="bp-task-chips"><span class="bp-task-chip">${wp.taskCount} tasks</span></div></td>
-        <td><span class="bp-impact-badge ${impactClass}">${wp.impact}</span></td>
-        <td><span class="bp-status-badge ${statusClass}">${wp.status.charAt(0).toUpperCase()+wp.status.slice(1)}</span></td>
-      </tr>`;
-    }).join('');
+  const titleEl    = document.getElementById('bp-card-title-text');
+  const tableWrap  = document.getElementById('bp-plan-table-wrap');
+  const aiWrap     = document.getElementById('bp-ai-predict-wrap');
 
-    const card = document.querySelector('.bp-card:has(#bp-plan-table) .bp-card-title');
-    if (card) card.lastChild.textContent = ' Optimized Block Plan – This Month';
+  const searchVal   = document.getElementById('bp-records-search')?.value || '';
+  const corridorVal = document.getElementById('bp-records-corridor-filter')?.value || 'all';
+
+  if (view === 'ai-predict') {
+    if (tableWrap) tableWrap.classList.add('hidden');
+    if (aiWrap)    aiWrap.classList.remove('hidden');
+    if (titleEl)   titleEl.textContent = 'AI Predictive Block Tracking & "Where Can Be What"';
+    renderBPAiPredictions(searchVal, corridorVal);
   } else {
-    renderBPWeeklyPlan();
-    const card = document.querySelector('.bp-card-title');
+    if (tableWrap) tableWrap.classList.remove('hidden');
+    if (aiWrap)    aiWrap.classList.add('hidden');
+
+    if (view === 'daily') {
+      if (titleEl) titleEl.textContent = 'Daily Block Records & Execution Logs (Today)';
+      renderBPDailyRecords(searchVal, corridorVal);
+    } else if (view === 'month') {
+      if (titleEl) titleEl.textContent = 'Monthly Mega-Block Quotas & Overhaul Records';
+      renderBPMonthlyRecords(searchVal, corridorVal);
+    } else {
+      if (titleEl) titleEl.textContent = 'Optimized Block Plan – This Week';
+      renderBPWeeklyPlan(searchVal, corridorVal);
+    }
   }
 }
 
-function generateMonthlyPlan() {
-  const sections = ['NDLS–CNB','CNB–ALD','ALD–MGS','MGS–PNBE','SUR–ST','LKO–GKP'];
-  const deptCombos = [['ENG','TRD','SNT'],['ENG','TRD'],['TRD','SNT'],['ENG','SNT'],['ENG'],['TRD']];
-  const impacts = ['Low','Low','Medium','None','Medium','Low','High','None','Low','Medium'];
-  const statuses = ['planned','planned','planned','planned'];
-  const weeks = ['Week 1','Week 2','Week 3','Week 4'];
-  const result = [];
-  weeks.forEach(wk => {
-    sections.slice(0, 4).forEach((sec, si) => {
-      const dc = deptCombos[(si + weeks.indexOf(wk)) % deptCombos.length];
-      result.push({
-        window: `${wk} – ${['Mon','Tue','Wed','Thu','Fri','Sat'][si % 6]} 02:00–08:00`,
-        section: sec,
-        depts: dc,
-        taskCount: dc.length * 2 + 1,
-        impact: impacts[(si + weeks.indexOf(wk)) % impacts.length],
-        status: 'planned',
-      });
+// Filter records across active view
+function filterBPRecords() {
+  const searchVal   = document.getElementById('bp-records-search')?.value || '';
+  const corridorVal = document.getElementById('bp-records-corridor-filter')?.value || 'all';
+
+  const view = BP_DATA.currentView;
+  if (view === 'daily') {
+    renderBPDailyRecords(searchVal, corridorVal);
+  } else if (view === 'month') {
+    renderBPMonthlyRecords(searchVal, corridorVal);
+  } else if (view === 'ai-predict') {
+    renderBPAiPredictions(searchVal, corridorVal);
+  } else {
+    renderBPWeeklyPlan(searchVal, corridorVal);
+  }
+}
+
+// Instant AI Recommendation Integration
+function applyAiBlockRecommendation(predictId) {
+  const pred = BP_DATA.aiPredictions.find(p => p.id === predictId);
+  if (!pred) return;
+
+  // Add into weekly plan dynamically if not present
+  const exists = BP_DATA.weeklyPlan.some(w => w.id === 'WP-' + pred.id);
+  if (!exists) {
+    BP_DATA.weeklyPlan.unshift({
+      id: 'WP-' + pred.id,
+      window: pred.whereCanBeWhat.optimalWindow,
+      section: pred.section,
+      depts: ['ENG','TRD','SNT'],
+      tasks: [pred.id],
+      impact: 'Low',
+      status: 'scheduled'
     });
-  });
-  return result;
+  }
+
+  showBPToast(`Integrated AI Recommendation for ${pred.section} into Master Schedule!`);
+  switchBPView('week');
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -562,7 +945,7 @@ function applyOptimizationResults() {
   updateBPStats();
   renderBPQueue();
   renderDeptCards();
-  renderBPWeeklyPlan();
+  filterBPRecords();
   drawGantt();
 
   showBPToast('AI Optimizer finished — block plan updated.');
@@ -572,26 +955,54 @@ function applyOptimizationResults() {
 // EXPORT
 // ─────────────────────────────────────────────────────────────
 function exportBlockPlan() {
-  const rows = [
-    ['Block Window', 'Section', 'Departments', 'Tasks', 'Impact', 'Status'],
-    ...BP_DATA.weeklyPlan.map(wp => [
-      wp.window,
-      wp.section,
-      wp.depts.map(d => deptLabel[d]).join(' + '),
-      wp.tasks.join(', '),
-      wp.impact,
-      wp.status,
-    ]),
-  ];
-  const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+  const currentView = BP_DATA.currentView;
+  let rows = [];
+  let filename = `BlockPlan_${currentView}_${new Date().toISOString().slice(0,10)}.csv`;
+
+  if (currentView === 'daily') {
+    rows = [
+      ['Log ID', 'Date', 'Time Window', 'Section', 'KM Span', 'Departments', 'Machinery', 'Train Regulation', 'Status', 'Efficiency'],
+      ...BP_DATA.dailyRecords.map(d => [
+        d.id, d.date, d.window, d.section, d.kmSpan, d.depts.join(' + '), d.machinery, d.regulation, d.status, d.efficiency
+      ])
+    ];
+  } else if (currentView === 'month') {
+    rows = [
+      ['Record ID', 'Month', 'Schedule Period', 'Section', 'Total Blocks', 'Cumulative Hrs', 'Departments', 'Quota Achieved', 'Punctuality Index'],
+      ...BP_DATA.monthlyRecords.map(m => [
+        m.id, m.month, m.weekRange, m.section, m.totalBlocks, m.hrsBlocked, m.departments, m.quotaAchieved, m.trainPunctuality
+      ])
+    ];
+  } else if (currentView === 'ai-predict') {
+    rows = [
+      ['Prediction ID', 'Section', 'KM Range', 'Chance of Block (%)', 'Urgency', 'Where', 'What', 'Optimal Window', 'Punctuality Impact'],
+      ...BP_DATA.aiPredictions.map(p => [
+        p.id, p.section, p.kmRange, p.chanceOfBlock, p.urgency, p.whereCanBeWhat.where, p.whereCanBeWhat.what, p.whereCanBeWhat.optimalWindow, p.whereCanBeWhat.trainsAffected
+      ])
+    ];
+  } else {
+    rows = [
+      ['Block Window', 'Section', 'Departments', 'Tasks', 'Impact', 'Status'],
+      ...BP_DATA.weeklyPlan.map(wp => [
+        wp.window,
+        wp.section,
+        wp.depts.map(d => deptLabel[d] || d).join(' + '),
+        wp.tasks.join(', '),
+        wp.impact,
+        wp.status,
+      ]),
+    ];
+  }
+
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href = url;
-  a.download = `BlockPlan_${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
-  showBPToast('Block plan exported as CSV.');
+  showBPToast(`Exported ${currentView.toUpperCase()} records as CSV.`);
 }
 
 // ─────────────────────────────────────────────────────────────

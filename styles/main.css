@@ -2557,4 +2557,246 @@ html, body {
   transform: scale(1.2);
 }
 
+/* ============================================================
+   AI PREDICTIVE BLOCK TRACKING & 'WHERE CAN BE WHAT' STYLES
+   ============================================================ */
+.bp-ai-predict-wrap {
+  padding: 16px 0 6px;
+}
+.bp-ai-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(37, 99, 235, 0.08));
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  border-radius: var(--radius-lg);
+  padding: 12px 18px;
+  margin-bottom: 16px;
+}
+.bp-ai-banner-icon {
+  font-size: 26px;
+  background: white;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.18);
+  flex-shrink: 0;
+}
+.bp-predict-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 1050px) {
+  .bp-predict-grid { grid-template-columns: 1fr; }
+}
+
+.bp-predict-card {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+.bp-predict-card:hover {
+  border-color: rgba(124, 58, 237, 0.4);
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.1);
+  transform: translateY(-2px);
+}
+.bp-predict-card.critical-chance {
+  border-left: 5px solid #dc2626;
+}
+.bp-predict-card.high-chance {
+  border-left: 5px solid #ea580c;
+}
+.bp-predict-card.medium-chance {
+  border-left: 5px solid #d97706;
+}
+.bp-predict-card.low-chance {
+  border-left: 5px solid #10b981;
+}
+
+.bpp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+.bpp-corridor {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--blue-900);
+  font-family: 'Inter', sans-serif;
+}
+.bpp-urgency {
+  font-size: 11px;
+  color: var(--gray-500);
+  margin-top: 2px;
+}
+.bpp-chance-wrap {
+  text-align: right;
+}
+.bpp-chance-num {
+  font-size: 24px;
+  font-weight: 800;
+  font-family: 'Rajdhani', sans-serif;
+  line-height: 1;
+}
+.bpp-chance-num.critical { color: #dc2626; }
+.bpp-chance-num.high { color: #ea580c; }
+.bpp-chance-num.medium { color: #d97706; }
+.bpp-chance-num.low { color: #059669; }
+.bpp-chance-lbl {
+  font-size: 9px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--gray-400);
+  letter-spacing: 0.5px;
+}
+
+/* Probability meter */
+.bpp-meter-track {
+  width: 100%;
+  height: 6px;
+  background: var(--gray-100);
+  border-radius: 99px;
+  overflow: hidden;
+  margin: 8px 0 12px;
+}
+.bpp-meter-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.bpp-meter-fill.critical { background: linear-gradient(90deg, #f87171, #dc2626); }
+.bpp-meter-fill.high     { background: linear-gradient(90deg, #fb923c, #ea580c); }
+.bpp-meter-fill.medium   { background: linear-gradient(90deg, #fbbf24, #d97706); }
+.bpp-meter-fill.low      { background: linear-gradient(90deg, #34d399, #059669); }
+
+/* Triggers list */
+.bpp-triggers {
+  background: rgba(15, 23, 42, 0.03);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+}
+.bpp-triggers-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.bpp-trigger-item {
+  font-size: 11px;
+  color: var(--gray-700);
+  margin-bottom: 3px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.bpp-trigger-item:last-child { margin-bottom: 0; }
+.bpp-trigger-item::before {
+  content: '•';
+  color: var(--blue-600);
+  font-weight: bold;
+}
+
+/* Where Can Be What - Recommendation Box */
+.bpp-rec-box {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.05), rgba(124, 58, 237, 0.06));
+  border: 1px dashed rgba(37, 99, 235, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.bpp-rec-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #1e3a8a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.bpp-rec-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.bpp-rec-item {
+  font-size: 11px;
+}
+.bpp-rec-lbl {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--gray-500);
+  text-transform: uppercase;
+}
+.bpp-rec-val {
+  font-weight: 700;
+  color: var(--blue-900);
+}
+.bpp-what-list {
+  background: white;
+  border-radius: 6px;
+  padding: 8px;
+  border: 1px solid rgba(37, 99, 235, 0.15);
+  margin-bottom: 8px;
+}
+.bpp-what-item {
+  font-size: 11px;
+  color: var(--gray-800);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.bpp-what-item:last-child { margin-bottom: 0; }
+.bpp-pax-impact {
+  font-size: 11px;
+  color: #059669;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.bpp-apply-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  padding: 9px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, #7c3aed, #2563eb);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(124, 58, 237, 0.3);
+  transition: all 0.2s ease;
+}
+.bpp-apply-btn:hover {
+  background: linear-gradient(135deg, #6d28d9, #1d4ed8);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 16px rgba(124, 58, 237, 0.4);
+}
+.bpp-apply-btn.applied {
+  background: #059669;
+  cursor: default;
+  box-shadow: none;
+}
+
+
 

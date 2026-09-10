@@ -614,8 +614,12 @@
             Run AI Optimizer
           </button>
           <div class="bp-view-toggle">
-            <button class="bp-vt-btn active" id="bpvt-week" onclick="switchBPView('week')">Weekly</button>
-            <button class="bp-vt-btn" id="bpvt-month" onclick="switchBPView('month')">Monthly</button>
+            <button class="bp-vt-btn" id="bpvt-daily" onclick="switchBPView('daily')" title="Daily Block Records & Execution Logs">📅 Daily Records</button>
+            <button class="bp-vt-btn active" id="bpvt-week" onclick="switchBPView('week')" title="Weekly Corridors & Shadow Schedule">🗓️ Weekly Records</button>
+            <button class="bp-vt-btn" id="bpvt-month" onclick="switchBPView('month')" title="Monthly Mega-Block Quotas & Overhaul">📊 Monthly Records</button>
+            <button class="bp-vt-btn" id="bpvt-ai-predict" onclick="switchBPView('ai-predict')" title="AI Block Probability & Where Can Be What" style="background:rgba(124,58,237,0.12);color:#7c3aed;border:1px solid rgba(124,58,237,0.3);font-weight:700;">
+              🤖 AI Chances &amp; Tracking
+            </button>
           </div>
         </div>
       </div>
@@ -761,32 +765,58 @@
             <div class="bp-queue-list" id="bp-queue-list"></div>
           </div>
 
-          <!-- Optimized Block Plan -->
+          <!-- Block Records & AI Tracking Card -->
           <div class="bp-card">
-            <div class="bp-card-header">
-              <h3 class="bp-card-title">
+            <div class="bp-card-header" style="flex-wrap:wrap;gap:10px;">
+              <h3 class="bp-card-title" id="bp-plan-card-title">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
-                Optimized Block Plan – This Week
+                <span id="bp-card-title-text">Optimized Block Plan – This Week</span>
               </h3>
-              <button class="bp-export-btn" onclick="exportBlockPlan()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Export
-              </button>
+              <div class="bp-header-actions" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <input type="text" class="search-input" id="bp-records-search" placeholder="Search corridor, tasks, gang…" oninput="filterBPRecords()" style="font-size:11px;padding:4px 10px;width:170px;" />
+                <select class="bp-filter-sel" id="bp-records-corridor-filter" onchange="filterBPRecords()">
+                  <option value="all">All Corridors</option>
+                  <option value="NDLS–CNB">NDLS–CNB</option>
+                  <option value="CNB–ALD">CNB–ALD</option>
+                  <option value="ALD–MGS">ALD–MGS</option>
+                  <option value="MGS–PNBE">MGS–PNBE</option>
+                  <option value="SUR–ST">SUR–ST</option>
+                  <option value="LKO–GKP">LKO–GKP</option>
+                </select>
+                <button class="bp-export-btn" onclick="exportBlockPlan()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Export Records
+                </button>
+              </div>
             </div>
-            <div class="bp-plan-table-wrap">
+
+            <!-- Standard Records Table (Daily, Weekly, Monthly) -->
+            <div class="bp-plan-table-wrap" id="bp-plan-table-wrap">
               <table class="bp-plan-table" id="bp-plan-table">
-                <thead>
+                <thead id="bp-plan-thead">
                   <tr>
                     <th>Block Window</th>
-                    <th>Section</th>
+                    <th>Corridor / Section</th>
                     <th>Departments</th>
-                    <th>Tasks</th>
-                    <th>Impact</th>
+                    <th>Integrated Tasks</th>
+                    <th>Impact / Punctuality</th>
                     <th>Status</th>
                   </tr>
                 </thead>
                 <tbody id="bp-plan-tbody"></tbody>
               </table>
+            </div>
+
+            <!-- AI Predictive Tracking & 'Where Can Be What' Container -->
+            <div class="bp-ai-predict-wrap hidden" id="bp-ai-predict-wrap">
+              <div class="bp-ai-banner">
+                <div class="bp-ai-banner-icon">🤖</div>
+                <div>
+                  <h4 style="margin:0 0 2px 0;font-size:13px;font-weight:700;color:var(--blue-900);">AI Predictive Block Intelligence Model</h4>
+                  <p style="margin:0;font-size:11px;color:var(--gray-500);">Evaluates Track Wear, GMT Stress, Sensor Anomalies &amp; Train Traffic to pinpoint high-probability block zones and zero-conflict execution windows.</p>
+                </div>
+              </div>
+              <div class="bp-predict-grid" id="bp-predict-grid"></div>
             </div>
           </div>
 
