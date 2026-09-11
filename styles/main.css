@@ -1762,6 +1762,262 @@ html, body {
 }
 .bp-vt-btn.active { background: white; color: var(--blue-600); box-shadow: var(--shadow-sm); }
 
+/* ─── Problem Context Card (Why TrainSync) ─── */
+.bp-problem-context-card {
+  background: #ffffff;
+  border: 1px solid var(--blue-200);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(30, 58, 95, 0.05);
+}
+
+.bp-pc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.bp-pc-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bp-pc-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: var(--blue-50);
+  border: 1px solid var(--blue-200);
+  color: var(--blue-700);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bp-pc-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--blue-900);
+  margin: 0;
+  letter-spacing: -0.2px;
+}
+
+.bp-pc-pill-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--blue-700);
+  background: var(--blue-100);
+  border: 1px solid var(--blue-200);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.bp-pc-meta-tag {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-400);
+}
+
+.bp-pc-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bp-pc-text-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bp-pc-desc {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--gray-600);
+  margin: 0;
+}
+
+.bp-pc-desc.bp-pc-solution {
+  color: var(--blue-900);
+}
+
+.bp-pc-brand-name {
+  color: var(--blue-800);
+  font-weight: 800;
+}
+
+/* Department & Concept Badges */
+.bp-pc-dept-badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: var(--radius-sm);
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+.bp-pc-dept-badge.eng {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+.bp-pc-dept-badge.trd {
+  background: #fef9c3;
+  color: #854d0e;
+  border: 1px solid #fde047;
+}
+.bp-pc-dept-badge.snt {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.bp-pc-alert-badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: var(--radius-sm);
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  white-space: nowrap;
+}
+
+.bp-pc-success-badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: var(--radius-sm);
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  white-space: nowrap;
+}
+
+/* Visual Flow Section */
+.bp-pc-flow-section {
+  background: var(--blue-50);
+  border: 1px solid var(--blue-100);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+}
+
+.bp-pc-flow-caption {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--blue-700);
+  margin-bottom: 8px;
+}
+
+.bp-pc-flow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bp-pc-flow-step {
+  flex: 1;
+  min-width: 140px;
+  background: #ffffff;
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  text-align: center;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+
+.bp-pc-flow-step-depts {
+  border: 1px solid var(--blue-200);
+}
+.bp-pc-flow-step-depts .bp-pc-flow-step-title {
+  color: var(--blue-900);
+}
+
+.bp-pc-flow-step-separate {
+  border: 1px solid #fde68a;
+  background: #fffdf5;
+}
+.bp-pc-flow-step-separate .bp-pc-flow-step-title {
+  color: #b45309;
+}
+
+.bp-pc-flow-step-engine {
+  border: 1.5px solid var(--blue-500);
+  background: #eff6ff;
+}
+.bp-pc-flow-step-engine .bp-pc-flow-step-title {
+  color: var(--blue-800);
+  font-weight: 800;
+}
+
+.bp-pc-flow-step-combined {
+  border: 1.5px solid #86efac;
+  background: #f0fdf4;
+}
+.bp-pc-flow-step-combined .bp-pc-flow-step-title {
+  color: #15803d;
+  font-weight: 800;
+}
+
+.bp-pc-flow-step-title {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.bp-pc-flow-step-sub {
+  font-size: 10px;
+  color: var(--gray-400);
+  margin-top: 2px;
+}
+
+.bp-pc-flow-arrow {
+  color: var(--blue-400);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1024px) {
+  .bp-pc-flow {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .bp-pc-flow-step {
+    min-width: 125px;
+    padding: 6px 8px;
+  }
+  .bp-pc-flow-step-title {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 650px) {
+  .bp-pc-flow {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .bp-pc-flow-arrow {
+    transform: rotate(90deg);
+    margin: -2px 0;
+  }
+}
+
 /* ─── KPI Stats ─── */
 .bp-stats-row {
   display: grid; grid-template-columns: repeat(5, 1fr);

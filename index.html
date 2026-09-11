@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles/main.css?v=20260911_7" />
+  <link rel="stylesheet" href="styles/main.css?v=20260911_8" />
 </head>
 <body>
 
@@ -651,6 +651,83 @@
           </div>
         </div>
       </div>
+
+      <!-- Problem Context: Why TrainSync? -->
+      <section class="bp-problem-context-card" id="bp-problem-context" aria-label="Why TrainSync Problem Context">
+        <div class="bp-pc-header">
+          <div class="bp-pc-title-wrap">
+            <span class="bp-pc-icon" aria-hidden="true">
+              <!-- Railway Track Switch & Coordination Icon -->
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19L10 5M20 19L14 5M6.5 14h11M8.5 9h7"/>
+              </svg>
+            </span>
+            <h3 class="bp-pc-title">Why TrainSync?</h3>
+            <span class="bp-pc-pill-label">Problem Context</span>
+          </div>
+          <div class="bp-pc-meta">
+            <span class="bp-pc-meta-tag">Multi-Department Block Coordination</span>
+          </div>
+        </div>
+
+        <div class="bp-pc-content">
+          <div class="bp-pc-text-block">
+            <p class="bp-pc-desc">
+              A single railway section may require maintenance from multiple departments at the same time — 
+              <span class="bp-pc-dept-badge eng" title="Civil &amp; Track Infrastructure">Engineering</span>, 
+              <span class="bp-pc-dept-badge trd" title="Traction Distribution">TRD (Traction Distribution)</span>, and 
+              <span class="bp-pc-dept-badge snt" title="Signal &amp; Telecommunication">S&amp;T (Signal &amp; Telecommunication)</span>.
+            </p>
+            <p class="bp-pc-desc">
+              Currently, these maintenance activities can be planned independently, which may result in the same railway section being blocked multiple times (<span class="bp-pc-alert-badge" title="Uncoordinated Independent Blocks">multiple separate blocks</span>). This can increase track downtime, reduce block utilization efficiency, and potentially disrupt train operations.
+            </p>
+            <p class="bp-pc-desc bp-pc-solution">
+              <strong class="bp-pc-brand-name">TrainSync</strong> coordinates compatible maintenance activities across departments and identifies opportunities to combine them into <span class="bp-pc-success-badge" title="Unified Maintenance Window">one combined optimized block</span>.
+            </p>
+          </div>
+
+          <!-- Visual Flow: Engineering + TRD + S&T → Separate Blocks → TrainSync → Combined Block -->
+          <div class="bp-pc-flow-section" aria-label="Coordination Workflow">
+            <div class="bp-pc-flow-caption">Coordination Flow:</div>
+            <div class="bp-pc-flow">
+              <div class="bp-pc-flow-step bp-pc-flow-step-depts">
+                <div class="bp-pc-flow-step-title">Engineering + TRD + S&amp;T</div>
+                <div class="bp-pc-flow-step-sub">3 Department Demands</div>
+              </div>
+              <div class="bp-pc-flow-arrow" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </div>
+              <div class="bp-pc-flow-step bp-pc-flow-step-separate">
+                <div class="bp-pc-flow-step-title">Separate Blocks</div>
+                <div class="bp-pc-flow-step-sub">Multiple Unlinked Closures</div>
+              </div>
+              <div class="bp-pc-flow-arrow" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </div>
+              <div class="bp-pc-flow-step bp-pc-flow-step-engine">
+                <div class="bp-pc-flow-step-title">TrainSync</div>
+                <div class="bp-pc-flow-step-sub">Corridor Coordination</div>
+              </div>
+              <div class="bp-pc-flow-arrow" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </div>
+              <div class="bp-pc-flow-step bp-pc-flow-step-combined">
+                <div class="bp-pc-flow-step-title">Combined Block</div>
+                <div class="bp-pc-flow-step-sub">Single Optimized Window</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <!-- KPI Stats Row (Simplified & Decision-Focused) -->
       <div class="bp-stats-row" id="bp-stats-row">
